@@ -14,7 +14,401 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_reports: {
+        Row: {
+          accidents: number | null
+          created_at: string
+          end_time: string
+          id: string
+          inspections: number | null
+          maintenance_requests: number | null
+          near_misses: number | null
+          officer_id: string | null
+          ppe_distributed: number | null
+          report_date: string
+          report_text: string | null
+          shift: string
+          start_time: string
+          status: string | null
+          suggestions: string | null
+          temperature: string | null
+          training_sessions: number | null
+          updated_at: string
+          violations: number | null
+          weather: string | null
+        }
+        Insert: {
+          accidents?: number | null
+          created_at?: string
+          end_time: string
+          id?: string
+          inspections?: number | null
+          maintenance_requests?: number | null
+          near_misses?: number | null
+          officer_id?: string | null
+          ppe_distributed?: number | null
+          report_date: string
+          report_text?: string | null
+          shift: string
+          start_time: string
+          status?: string | null
+          suggestions?: string | null
+          temperature?: string | null
+          training_sessions?: number | null
+          updated_at?: string
+          violations?: number | null
+          weather?: string | null
+        }
+        Update: {
+          accidents?: number | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          inspections?: number | null
+          maintenance_requests?: number | null
+          near_misses?: number | null
+          officer_id?: string | null
+          ppe_distributed?: number | null
+          report_date?: string
+          report_text?: string | null
+          shift?: string
+          start_time?: string
+          status?: string | null
+          suggestions?: string | null
+          temperature?: string | null
+          training_sessions?: number | null
+          updated_at?: string
+          violations?: number | null
+          weather?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reports_officer_id_fkey"
+            columns: ["officer_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ergonomic_assessments: {
+        Row: {
+          ai_analysis: Json | null
+          assessment_date: string
+          assessment_type: string
+          assessor_id: string | null
+          body_parts: Json
+          created_at: string
+          department: string
+          employee_name: string
+          final_score: number
+          follow_up_date: string | null
+          id: string
+          position: string
+          recommendations: string[] | null
+          risk_level: string
+          shift_duration: string | null
+          status: string
+          updated_at: string
+          workstation: string | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          assessment_date: string
+          assessment_type?: string
+          assessor_id?: string | null
+          body_parts: Json
+          created_at?: string
+          department: string
+          employee_name: string
+          final_score: number
+          follow_up_date?: string | null
+          id?: string
+          position: string
+          recommendations?: string[] | null
+          risk_level: string
+          shift_duration?: string | null
+          status: string
+          updated_at?: string
+          workstation?: string | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          assessment_date?: string
+          assessment_type?: string
+          assessor_id?: string | null
+          body_parts?: Json
+          created_at?: string
+          department?: string
+          employee_name?: string
+          final_score?: number
+          follow_up_date?: string | null
+          id?: string
+          position?: string
+          recommendations?: string[] | null
+          risk_level?: string
+          shift_duration?: string | null
+          status?: string
+          updated_at?: string
+          workstation?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ergonomic_assessments_assessor_id_fkey"
+            columns: ["assessor_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          immediate_action: string | null
+          incident_date: string
+          incident_time: string
+          injured_person: string | null
+          location: string
+          preventive_action: string | null
+          reporter_id: string | null
+          root_cause: string | null
+          severity: string
+          status: string
+          type: string
+          updated_at: string
+          witness_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          immediate_action?: string | null
+          incident_date: string
+          incident_time: string
+          injured_person?: string | null
+          location: string
+          preventive_action?: string | null
+          reporter_id?: string | null
+          root_cause?: string | null
+          severity?: string
+          status?: string
+          type: string
+          updated_at?: string
+          witness_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          immediate_action?: string | null
+          incident_date?: string
+          incident_time?: string
+          injured_person?: string | null
+          location?: string
+          preventive_action?: string | null
+          reporter_id?: string | null
+          root_cause?: string | null
+          severity?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          witness_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      risk_assessments: {
+        Row: {
+          additional_controls: string | null
+          area: string
+          assessment_id: string
+          created_at: string
+          existing_controls: string[] | null
+          hazard: string
+          hazard_category: string | null
+          id: string
+          probability: string
+          process_name: string
+          responsible_person_id: string | null
+          review_date: string | null
+          risk_level: string
+          risk_score: number
+          severity: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          additional_controls?: string | null
+          area: string
+          assessment_id: string
+          created_at?: string
+          existing_controls?: string[] | null
+          hazard: string
+          hazard_category?: string | null
+          id?: string
+          probability: string
+          process_name: string
+          responsible_person_id?: string | null
+          review_date?: string | null
+          risk_level: string
+          risk_score: number
+          severity: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          additional_controls?: string | null
+          area?: string
+          assessment_id?: string
+          created_at?: string
+          existing_controls?: string[] | null
+          hazard?: string
+          hazard_category?: string | null
+          id?: string
+          probability?: string
+          process_name?: string
+          responsible_person_id?: string | null
+          review_date?: string | null
+          risk_level?: string
+          risk_score?: number
+          severity?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_assessments_responsible_person_id_fkey"
+            columns: ["responsible_person_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          department: string | null
+          email: string | null
+          id: string
+          last_login: string | null
+          name: string
+          phone: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          last_login?: string | null
+          name: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          last_login?: string | null
+          name?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_permits: {
+        Row: {
+          approver_id: string | null
+          created_at: string
+          end_time: string
+          hazards: string[] | null
+          id: string
+          permit_date: string
+          permit_number: string
+          precautions: string[] | null
+          requester_id: string | null
+          start_time: string
+          status: string
+          type: string
+          updated_at: string
+          valid_until: string | null
+          witnesses: string[] | null
+          work_description: string | null
+        }
+        Insert: {
+          approver_id?: string | null
+          created_at?: string
+          end_time: string
+          hazards?: string[] | null
+          id?: string
+          permit_date: string
+          permit_number: string
+          precautions?: string[] | null
+          requester_id?: string | null
+          start_time: string
+          status?: string
+          type: string
+          updated_at?: string
+          valid_until?: string | null
+          witnesses?: string[] | null
+          work_description?: string | null
+        }
+        Update: {
+          approver_id?: string | null
+          created_at?: string
+          end_time?: string
+          hazards?: string[] | null
+          id?: string
+          permit_date?: string
+          permit_number?: string
+          precautions?: string[] | null
+          requester_id?: string | null
+          start_time?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          valid_until?: string | null
+          witnesses?: string[] | null
+          work_description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_permits_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "work_permits_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
