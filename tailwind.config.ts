@@ -61,7 +61,39 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// HSE Color System
+				hse: {
+					danger: 'hsl(var(--hse-danger))',
+					'danger-foreground': 'hsl(var(--hse-danger-foreground))',
+					warning: 'hsl(var(--hse-warning))',
+					'warning-foreground': 'hsl(var(--hse-warning-foreground))',
+					success: 'hsl(var(--hse-success))',
+					'success-foreground': 'hsl(var(--hse-success-foreground))',
+					info: 'hsl(var(--hse-info))',
+					'info-foreground': 'hsl(var(--hse-info-foreground))'
+				},
+				risk: {
+					low: 'hsl(var(--risk-low))',
+					medium: 'hsl(var(--risk-medium))',
+					high: 'hsl(var(--risk-high))',
+					critical: 'hsl(var(--risk-critical))'
 				}
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-danger': 'var(--gradient-danger)',
+				'gradient-success': 'var(--gradient-success)',
+				'gradient-warning': 'var(--gradient-warning)'
+			},
+			boxShadow: {
+				'soft': 'var(--shadow-soft)',
+				'medium': 'var(--shadow-medium)',
+				'large': 'var(--shadow-large)'
+			},
+			transitionTimingFunction: {
+				'smooth': 'var(--transition-smooth)',
+				'fast': 'var(--transition-fast)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
