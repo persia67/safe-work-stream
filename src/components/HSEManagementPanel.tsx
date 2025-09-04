@@ -441,9 +441,10 @@ const HSEManagementPanel = () => {
     return Math.min(finalScore, 7);
   };
 
-  // محاسبه امتیاز REBA
+    // محاسبه امتیاز REBA
   const calculateREBA = (bodyParts) => {
-    const { neck, trunk, leg, upperArm, lowerArm, wrist } = bodyParts;
+    const { neck, trunk, upperArm, lowerArm, wrist } = bodyParts;
+    const leg = bodyParts.leg || { score: 1, angle: 0 };
     
     // امتیاز تنه
     let trunkScore = trunk.score + (leg?.score || 1);
@@ -487,7 +488,7 @@ const HSEManagementPanel = () => {
     }
 
     if (modalType === 'ergonomic') {
-      const bodyParts = {
+      const bodyParts: any = {
         neck: { score: parseInt(modalData.neckScore) || 1, angle: parseInt(modalData.neckAngle) || 0 },
         trunk: { score: parseInt(modalData.trunkScore) || 1, angle: parseInt(modalData.trunkAngle) || 0 },
         upperArm: { score: parseInt(modalData.upperArmScore) || 1, angle: parseInt(modalData.upperArmAngle) || 0 },
@@ -1009,13 +1010,15 @@ const IncidentsContent = ({ incidents, openModal, handleDelete, searchTerm, setS
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Input
-            placeholder="جستجو در حوادث..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-80"
-            icon={<Search className="w-4 h-4" />}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="جستجو در حوادث..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 pl-10"
+            />
+          </div>
           <Button variant="outline">
             <Filter className="w-4 h-4 ml-2" />
             فیلتر
