@@ -1367,7 +1367,397 @@ const ModalContent = ({ modalType, modalData, setModalData, handleSave, closeMod
             </>
           )}
 
-          {/* Other modal types content... */}
+          {modalType === 'permit' && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>شماره مجوز</Label>
+                  <Input
+                    value={modalData.permitNumber || ''}
+                    onChange={(e) => setModalData({...modalData, permitNumber: e.target.value})}
+                    placeholder="شماره مجوز"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>نوع مجوز</Label>
+                  <Select value={modalData.type || ''} onValueChange={(value) => setModalData({...modalData, type: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="انتخاب کنید" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="کار در ارتفاع">کار در ارتفاع</SelectItem>
+                      <SelectItem value="کار داغ">کار داغ</SelectItem>
+                      <SelectItem value="ورود به فضای محدود">ورود به فضای محدود</SelectItem>
+                      <SelectItem value="جوشکاری">جوشکاری</SelectItem>
+                      <SelectItem value="تعمیرات برقی">تعمیرات برقی</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>شرح کار</Label>
+                <Textarea
+                  value={modalData.workDescription || ''}
+                  onChange={(e) => setModalData({...modalData, workDescription: e.target.value})}
+                  placeholder="شرح دقیق کار مورد نظر"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>تاریخ شروع</Label>
+                  <Input
+                    type="date"
+                    value={modalData.permitDate || ''}
+                    onChange={(e) => setModalData({...modalData, permitDate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ساعت شروع</Label>
+                  <Input
+                    type="time"
+                    value={modalData.startTime || ''}
+                    onChange={(e) => setModalData({...modalData, startTime: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ساعت پایان</Label>
+                  <Input
+                    type="time"
+                    value={modalData.endTime || ''}
+                    onChange={(e) => setModalData({...modalData, endTime: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>خطرات احتمالی</Label>
+                <Textarea
+                  value={modalData.hazards || ''}
+                  onChange={(e) => setModalData({...modalData, hazards: e.target.value})}
+                  placeholder="خطرات مرتبط با این کار را شرح دهید"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>اقدامات احتیاطی</Label>
+                <Textarea
+                  value={modalData.precautions || ''}
+                  onChange={(e) => setModalData({...modalData, precautions: e.target.value})}
+                  placeholder="اقدامات احتیاطی مورد نیاز"
+                  rows={3}
+                />
+              </div>
+            </>
+          )}
+
+          {modalType === 'risk' && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>شناسه ارزیابی</Label>
+                  <Input
+                    value={modalData.assessmentId || ''}
+                    onChange={(e) => setModalData({...modalData, assessmentId: e.target.value})}
+                    placeholder="کد ارزیابی"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>نام فرآیند</Label>
+                  <Input
+                    value={modalData.processName || ''}
+                    onChange={(e) => setModalData({...modalData, processName: e.target.value})}
+                    placeholder="نام فرآیند"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>منطقه</Label>
+                <Input
+                  value={modalData.area || ''}
+                  onChange={(e) => setModalData({...modalData, area: e.target.value})}
+                  placeholder="منطقه یا بخش"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>خطر شناسایی شده</Label>
+                <Textarea
+                  value={modalData.hazard || ''}
+                  onChange={(e) => setModalData({...modalData, hazard: e.target.value})}
+                  placeholder="شرح خطر"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>دسته‌بندی خطر</Label>
+                  <Select value={modalData.hazardCategory || 'فیزیکی'} onValueChange={(value) => setModalData({...modalData, hazardCategory: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="فیزیکی">فیزیکی</SelectItem>
+                      <SelectItem value="شیمیایی">شیمیایی</SelectItem>
+                      <SelectItem value="بیولوژیکی">بیولوژیکی</SelectItem>
+                      <SelectItem value="ارگونومی">ارگونومی</SelectItem>
+                      <SelectItem value="ایمنی">ایمنی</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>احتمال وقوع</Label>
+                  <Select value={modalData.probability || ''} onValueChange={(value) => setModalData({...modalData, probability: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="انتخاب کنید" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="خیلی کم">خیلی کم (1)</SelectItem>
+                      <SelectItem value="کم">کم (2)</SelectItem>
+                      <SelectItem value="متوسط">متوسط (3)</SelectItem>
+                      <SelectItem value="بالا">بالا (4)</SelectItem>
+                      <SelectItem value="خیلی بالا">خیلی بالا (5)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>شدت پیامد</Label>
+                <Select value={modalData.severity || ''} onValueChange={(value) => setModalData({...modalData, severity: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="انتخاب کنید" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ناچیز">ناچیز (1)</SelectItem>
+                    <SelectItem value="جزئی">جزئی (2)</SelectItem>
+                    <SelectItem value="متوسط">متوسط (3)</SelectItem>
+                    <SelectItem value="شدید">شدید (4)</SelectItem>
+                    <SelectItem value="فاجعه‌بار">فاجعه‌بار (5)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>کنترل‌های موجود</Label>
+                <Textarea
+                  value={modalData.existingControls || ''}
+                  onChange={(e) => setModalData({...modalData, existingControls: e.target.value})}
+                  placeholder="کنترل‌های موجود برای این خطر"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>کنترل‌های اضافی پیشنهادی</Label>
+                <Textarea
+                  value={modalData.additionalControls || ''}
+                  onChange={(e) => setModalData({...modalData, additionalControls: e.target.value})}
+                  placeholder="کنترل‌های اضافی مورد نیاز"
+                  rows={3}
+                />
+              </div>
+            </>
+          )}
+
+          {modalType === 'report' && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>تاریخ گزارش</Label>
+                  <Input
+                    type="date"
+                    value={modalData.reportDate || ''}
+                    onChange={(e) => setModalData({...modalData, reportDate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>شیفت</Label>
+                  <Select value={modalData.shift || ''} onValueChange={(value) => setModalData({...modalData, shift: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="انتخاب کنید" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="صبح">صبح</SelectItem>
+                      <SelectItem value="عصر">عصر</SelectItem>
+                      <SelectItem value="شب">شب</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>ساعت شروع</Label>
+                  <Input
+                    type="time"
+                    value={modalData.startTime || ''}
+                    onChange={(e) => setModalData({...modalData, startTime: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ساعت پایان</Label>
+                  <Input
+                    type="time"
+                    value={modalData.endTime || ''}
+                    onChange={(e) => setModalData({...modalData, endTime: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>وضع آب و هوا</Label>
+                  <Select value={modalData.weather || ''} onValueChange={(value) => setModalData({...modalData, weather: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="انتخاب کنید" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="آفتابی">آفتابی</SelectItem>
+                      <SelectItem value="ابری">ابری</SelectItem>
+                      <SelectItem value="بارانی">بارانی</SelectItem>
+                      <SelectItem value="برفی">برفی</SelectItem>
+                      <SelectItem value="طوفانی">طوفانی</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>دما (درجه سانتیگراد)</Label>
+                  <Input
+                    type="number"
+                    value={modalData.temperature || ''}
+                    onChange={(e) => setModalData({...modalData, temperature: e.target.value})}
+                    placeholder="25"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>تعداد بازرسی‌ها</Label>
+                  <Input
+                    type="number"
+                    value={modalData.inspections || '0'}
+                    onChange={(e) => setModalData({...modalData, inspections: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>تعداد حوادث</Label>
+                  <Input
+                    type="number"
+                    value={modalData.accidents || '0'}
+                    onChange={(e) => setModalData({...modalData, accidents: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>نزدیک به حادثه</Label>
+                  <Input
+                    type="number"
+                    value={modalData.nearMisses || '0'}
+                    onChange={(e) => setModalData({...modalData, nearMisses: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>تخلفات</Label>
+                  <Input
+                    type="number"
+                    value={modalData.violations || '0'}
+                    onChange={(e) => setModalData({...modalData, violations: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>آموزش‌های ارائه شده</Label>
+                  <Input
+                    type="number"
+                    value={modalData.trainingSessions || '0'}
+                    onChange={(e) => setModalData({...modalData, trainingSessions: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>PPE توزیع شده</Label>
+                  <Input
+                    type="number"
+                    value={modalData.ppeDistributed || '0'}
+                    onChange={(e) => setModalData({...modalData, ppeDistributed: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>متن گزارش</Label>
+                <Textarea
+                  value={modalData.reportText || ''}
+                  onChange={(e) => setModalData({...modalData, reportText: e.target.value})}
+                  placeholder="گزارش تفصیلی از فعالیت‌های روز"
+                  rows={4}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>پیشنهادات</Label>
+                <Textarea
+                  value={modalData.suggestions || ''}
+                  onChange={(e) => setModalData({...modalData, suggestions: e.target.value})}
+                  placeholder="پیشنهادات برای بهبود ایمنی"
+                  rows={3}
+                />
+              </div>
+            </>
+          )}
+
+          {modalType === 'user' && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>نام و نام خانوادگی</Label>
+                  <Input
+                    value={modalData.name || ''}
+                    onChange={(e) => setModalData({...modalData, name: e.target.value})}
+                    placeholder="نام کامل"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ایمیل</Label>
+                  <Input
+                    type="email"
+                    value={modalData.email || ''}
+                    onChange={(e) => setModalData({...modalData, email: e.target.value})}
+                    placeholder="example@company.com"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>تلفن</Label>
+                  <Input
+                    value={modalData.phone || ''}
+                    onChange={(e) => setModalData({...modalData, phone: e.target.value})}
+                    placeholder="09xxxxxxxxx"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>بخش</Label>
+                  <Input
+                    value={modalData.department || ''}
+                    onChange={(e) => setModalData({...modalData, department: e.target.value})}
+                    placeholder="نام بخش"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>نقش</Label>
+                <Select value={modalData.role || 'safety_officer'} onValueChange={(value) => setModalData({...modalData, role: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="safety_officer">افسر ایمنی</SelectItem>
+                    <SelectItem value="supervisor">سرپرست</SelectItem>
+                    <SelectItem value="manager">مدیر</SelectItem>
+                    <SelectItem value="admin">مدیر سیستم</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
