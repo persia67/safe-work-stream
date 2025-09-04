@@ -34,7 +34,10 @@ import {
   Zap,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Thermometer,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -686,7 +689,7 @@ const HSEManagementPanel = () => {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-primary">سیستم مدیریت HSE</CardTitle>
-              <CardDescription className="text-base mt-2">صنایع فولاد دانیال</CardDescription>
+              <CardDescription className="text-base mt-2">گوره صنعتی دانیال استیل</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -756,7 +759,7 @@ const HSEManagementPanel = () => {
               </div>
               <div>
                 <h1 className="font-bold text-lg text-primary">HSE Management</h1>
-                <p className="text-xs text-muted-foreground">صنایع فولاد دانیال</p>
+                <p className="text-xs text-muted-foreground">گوره صنعتی دانیال استیل</p>
               </div>
             </div>
           </div>
@@ -847,7 +850,52 @@ const HSEManagementPanel = () => {
                 setSearchTerm={setSearchTerm}
               />
             )}
-            {/* Other tab contents... */}
+            {activeTab === 'ergonomics' && (
+              <ErgonomicsContent 
+                assessments={ergonomicAssessments}
+                openModal={openModal}
+                handleDelete={handleDelete}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            )}
+            {activeTab === 'permits' && (
+              <PermitsContent 
+                permits={workPermits}
+                openModal={openModal}
+                handleDelete={handleDelete}
+                updatePermitStatus={updatePermitStatus}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            )}
+            {activeTab === 'reports' && (
+              <ReportsContent 
+                reports={dailyReports}
+                openModal={openModal}
+                handleDelete={handleDelete}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            )}
+            {activeTab === 'risk' && (
+              <RiskAssessmentContent 
+                assessments={riskAssessments}
+                openModal={openModal}
+                handleDelete={handleDelete}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            )}
+            {activeTab === 'users' && (
+              <UsersContent 
+                users={users}
+                openModal={openModal}
+                handleDelete={handleDelete}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -1332,6 +1380,548 @@ const ModalContent = ({ modalType, modalData, setModalData, handleSave, closeMod
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+// Ergonomics Content Component
+const ErgonomicsContent = ({ assessments, openModal, handleDelete, searchTerm, setSearchTerm }) => {
+  const filteredAssessments = assessments.filter(assessment =>
+    assessment.employeeName.includes(searchTerm) ||
+    assessment.department.includes(searchTerm) ||
+    assessment.position.includes(searchTerm)
+  );
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'کم': return 'hse-success';
+      case 'متوسط': return 'hse-warning';
+      case 'بالا': return 'hse-danger';
+      default: return 'primary';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="جستجو در ارزیابی‌های ارگونومی..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 pl-10"
+            />
+          </div>
+        </div>
+        <Button onClick={() => openModal('ergonomic')} className="bg-gradient-primary">
+          <Plus className="w-4 h-4 ml-2" />
+          ارزیابی جدید
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredAssessments.map((assessment) => (
+          <Card key={assessment.id} className="shadow-soft hover:shadow-medium transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">{assessment.employeeName}</CardTitle>
+                  <CardDescription>{assessment.department} - {assessment.position}</CardDescription>
+                </div>
+                <Badge className={`bg-${getRiskColor(assessment.riskLevel)}/10 text-${getRiskColor(assessment.riskLevel)}`}>
+                  {assessment.riskLevel}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span>{assessment.date}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Activity className="w-4 h-4 text-muted-foreground" />
+                <span>امتیاز نهایی: {assessment.finalScore}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-muted-foreground" />
+                <span>وضعیت: {assessment.status}</span>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => openModal('ergonomic', assessment)}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openModal('ergonomic', assessment)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-hse-danger">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>حذف ارزیابی</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        آیا از حذف این ارزیابی اطمینان دارید؟
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>لغو</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete('ergonomic', assessment.id)}>
+                        حذف
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Work Permits Content Component
+const PermitsContent = ({ permits, openModal, handleDelete, updatePermitStatus, searchTerm, setSearchTerm }) => {
+  const filteredPermits = permits.filter(permit =>
+    permit.permitNumber.includes(searchTerm) ||
+    permit.type.includes(searchTerm) ||
+    permit.workDescription.includes(searchTerm)
+  );
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'تایید شده': return 'hse-success';
+      case 'در انتظار تایید': return 'hse-warning';
+      case 'رد شده': return 'hse-danger';
+      case 'تکمیل شده': return 'hse-info';
+      default: return 'primary';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="جستجو در مجوزهای کار..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 pl-10"
+            />
+          </div>
+        </div>
+        <Button onClick={() => openModal('permit')} className="bg-gradient-primary">
+          <Plus className="w-4 h-4 ml-2" />
+          مجوز جدید
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {filteredPermits.map((permit) => (
+          <Card key={permit.id} className="shadow-soft hover:shadow-medium transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">{permit.permitNumber}</CardTitle>
+                  <CardDescription>{permit.type}</CardDescription>
+                </div>
+                <Badge className={`bg-${getStatusColor(permit.status)}/10 text-${getStatusColor(permit.status)}`}>
+                  {permit.status}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span>{permit.date} ({permit.startTime} - {permit.endTime})</span>
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">شرح کار:</span>
+                <p className="text-muted-foreground mt-1">{permit.workDescription}</p>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <span>درخواست‌کننده: {permit.requester}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex gap-2">
+                  {permit.status === 'در انتظار تایید' && (
+                    <>
+                      <Button size="sm" onClick={() => updatePermitStatus(permit.id, 'تایید شده')} className="bg-hse-success text-white">
+                        تایید
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => updatePermitStatus(permit.id, 'رد شده')} className="text-hse-danger">
+                        رد
+                      </Button>
+                    </>
+                  )}
+                  {permit.status === 'تایید شده' && (
+                    <Button size="sm" onClick={() => updatePermitStatus(permit.id, 'تکمیل شده')} className="bg-hse-info text-white">
+                      تکمیل کار
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => openModal('permit', permit)}>
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="text-hse-danger">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>حذف مجوز</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          آیا از حذف این مجوز اطمینان دارید؟
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>لغو</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete('permit', permit.id)}>
+                          حذف
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Daily Reports Content Component
+const ReportsContent = ({ reports, openModal, handleDelete, searchTerm, setSearchTerm }) => {
+  const filteredReports = reports.filter(report =>
+    report.shift.includes(searchTerm) ||
+    report.weather.includes(searchTerm)
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="جستجو در گزارش‌های روزانه..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 pl-10"
+            />
+          </div>
+        </div>
+        <Button onClick={() => openModal('report')} className="bg-gradient-primary">
+          <Plus className="w-4 h-4 ml-2" />
+          گزارش جدید
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredReports.map((report) => (
+          <Card key={report.id} className="shadow-soft hover:shadow-medium transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">گزارش {report.shift}</CardTitle>
+                  <CardDescription>{report.date}</CardDescription>
+                </div>
+                <Badge variant="outline">{report.status}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span>{report.startTime} - {report.endTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Thermometer className="w-4 h-4 text-muted-foreground" />
+                  <span>{report.temperature}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>بازرسی‌ها: {report.inspections}</div>
+                <div>آموزش‌ها: {report.trainingSessions}</div>
+                <div>تخلفات: {report.violations}</div>
+                <div>حوادث: {report.accidents}</div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => openModal('report', report)}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openModal('report', report)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-hse-danger">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>حذف گزارش</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        آیا از حذف این گزارش اطمینان دارید؟
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>لغو</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete('report', report.id)}>
+                        حذف
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Risk Assessment Content Component
+const RiskAssessmentContent = ({ assessments, openModal, handleDelete, searchTerm, setSearchTerm }) => {
+  const filteredAssessments = assessments.filter(assessment =>
+    assessment.assessmentId.includes(searchTerm) ||
+    assessment.area.includes(searchTerm) ||
+    assessment.hazard.includes(searchTerm)
+  );
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'کم': return 'hse-success';
+      case 'متوسط': return 'hse-warning';
+      case 'بالا': return 'hse-danger';
+      default: return 'primary';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="جستجو در ارزیابی‌های ریسک..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 pl-10"
+            />
+          </div>
+        </div>
+        <Button onClick={() => openModal('risk')} className="bg-gradient-primary">
+          <Plus className="w-4 h-4 ml-2" />
+          ارزیابی جدید
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {filteredAssessments.map((assessment) => (
+          <Card key={assessment.id} className="shadow-soft hover:shadow-medium transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">{assessment.assessmentId}</CardTitle>
+                  <CardDescription>{assessment.area} - {assessment.processName}</CardDescription>
+                </div>
+                <Badge className={`bg-${getRiskColor(assessment.riskLevel)}/10 text-${getRiskColor(assessment.riskLevel)}`}>
+                  {assessment.riskLevel}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium">خطر:</span>
+                <span>{assessment.hazard}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Target className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium">امتیاز ریسک:</span>
+                <span>{assessment.riskScore}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium">مسئول:</span>
+                <span>{assessment.responsiblePerson}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium">وضعیت:</span>
+                <span>{assessment.status}</span>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => openModal('risk', assessment)}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openModal('risk', assessment)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-hse-danger">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>حذف ارزیابی</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        آیا از حذف این ارزیابی ریسک اطمینان دارید؟
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>لغو</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete('risk', assessment.id)}>
+                        حذف
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Users Content Component
+const UsersContent = ({ users, openModal, handleDelete, searchTerm, setSearchTerm }) => {
+  const filteredUsers = users.filter(user =>
+    user.name.includes(searchTerm) ||
+    user.department.includes(searchTerm) ||
+    user.role.includes(searchTerm)
+  );
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'admin': return 'hse-danger';
+      case 'safety_manager': return 'hse-warning';
+      case 'safety_officer': return 'hse-info';
+      case 'employee': return 'hse-success';
+      default: return 'primary';
+    }
+  };
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case 'admin': return 'مدیر سیستم';
+      case 'safety_manager': return 'مدیر ایمنی';
+      case 'safety_officer': return 'افسر ایمنی';
+      case 'employee': return 'کارمند';
+      default: return role;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="جستجو در کاربران..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-80 pl-10"
+            />
+          </div>
+        </div>
+        <Button onClick={() => openModal('user')} className="bg-gradient-primary">
+          <Plus className="w-4 h-4 ml-2" />
+          کاربر جدید
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredUsers.map((user) => (
+          <Card key={user.id} className="shadow-soft hover:shadow-medium transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{user.name}</CardTitle>
+                    <CardDescription>{user.department}</CardDescription>
+                  </div>
+                </div>
+                <Badge className={`bg-${getRoleColor(user.role)}/10 text-${getRoleColor(user.role)}`}>
+                  {getRoleLabel(user.role)}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                <span>{user.email}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <span>{user.phone}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span>آخرین ورود: {user.lastLogin}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className={`w-4 h-4 ${user.active ? 'text-hse-success' : 'text-muted-foreground'}`} />
+                <span>{user.active ? 'فعال' : 'غیرفعال'}</span>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => openModal('user', user)}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openModal('user', user)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-hse-danger">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>حذف کاربر</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        آیا از حذف این کاربر اطمینان دارید؟
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>لغو</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete('user', user.id)}>
+                        حذف
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 
