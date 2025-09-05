@@ -896,6 +896,30 @@ const HSEManagementPanel = () => {
                 setSearchTerm={setSearchTerm}
               />
             )}
+            {activeTab === 'analytics' && (
+              <AnalyticsContent 
+                incidents={incidents}
+                ergonomicAssessments={ergonomicAssessments}
+                workPermits={workPermits}
+                dailyReports={dailyReports}
+                riskAssessments={riskAssessments}
+              />
+            )}
+            {activeTab === 'ai-insights' && (
+              <AIInsightsContent 
+                incidents={incidents}
+                ergonomicAssessments={ergonomicAssessments}
+                riskAssessments={riskAssessments}
+                analyzeErgonomics={analyzeErgonomics}
+              />
+            )}
+            {activeTab === 'settings' && (
+              <SettingsContent 
+                currentUser={currentUser}
+                users={users}
+                setUsers={setUsers}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -2311,6 +2335,811 @@ const UsersContent = ({ users, openModal, handleDelete, searchTerm, setSearchTer
           </Card>
         ))}
       </div>
+    </div>
+  );
+};
+
+// Analytics Content Component
+const AnalyticsContent = ({ incidents, ergonomicAssessments, workPermits, dailyReports, riskAssessments }) => {
+  // Generate analytics data
+  const currentMonth = new Date().getMonth();
+  const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+  
+  // Incident trends data
+  const incidentTrendsData = Array.from({ length: 6 }, (_, i) => {
+    const monthIndex = (currentMonth - 5 + i + 12) % 12;
+    return {
+      month: monthNames[monthIndex],
+      incidents: Math.floor(Math.random() * 8) + 1,
+      nearMisses: Math.floor(Math.random() * 15) + 5,
+      accidents: Math.floor(Math.random() * 3)
+    };
+  });
+
+  // Risk distribution data
+  const riskDistributionData = [
+    { name: 'کم', value: 45, fill: 'hsl(var(--hse-success))' },
+    { name: 'متوسط', value: 35, fill: 'hsl(var(--hse-warning))' },
+    { name: 'بالا', value: 15, fill: 'hsl(var(--hse-danger))' },
+    { name: 'بحرانی', value: 5, fill: 'hsl(var(--destructive))' }
+  ];
+
+  // Department statistics
+  const departmentData = [
+    { department: 'تولید', incidents: 8, training: 45, compliance: 92 },
+    { department: 'نگهداری', incidents: 3, training: 32, compliance: 88 },
+    { department: 'انبار', incidents: 2, training: 28, compliance: 95 },
+    { department: 'مدیریت', incidents: 0, training: 15, compliance: 100 }
+  ];
+
+  // Training effectiveness data
+  const trainingData = [
+    { month: 'فروردین', beforeTraining: 12, afterTraining: 3 },
+    { month: 'اردیبهشت', beforeTraining: 8, afterTraining: 2 },
+    { month: 'خرداد', beforeTraining: 15, afterTraining: 4 },
+    { month: 'تیر', beforeTraining: 6, afterTraining: 1 },
+    { month: 'مرداد', beforeTraining: 10, afterTraining: 2 },
+    { month: 'شهریور', beforeTraining: 4, afterTraining: 1 }
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-primary">تحلیل و آمار HSE</h2>
+          <p className="text-muted-foreground">تحلیل جامع عملکرد ایمنی و بهداشت</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Download className="w-4 h-4 ml-2" />
+            دانلود گزارش
+          </Button>
+          <Button className="bg-gradient-primary">
+            <Upload className="w-4 h-4 ml-2" />
+            صادرات آمار
+          </Button>
+        </div>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { title: 'کل حوادث امسال', value: incidents.length, change: -12, icon: AlertTriangle, color: 'hse-danger' },
+          { title: 'نرخ ایمنی', value: '94.2%', change: +3.5, icon: Shield, color: 'hse-success' },
+          { title: 'ارزیابی‌های انجام شده', value: ergonomicAssessments.length + riskAssessments.length, change: +8, icon: CheckCircle, color: 'hse-info' },
+          { title: 'روزهای بدون حادثه', value: 45, change: +15, icon: Target, color: 'hse-warning' }
+        ].map((metric, index) => {
+          const Icon = metric.icon;
+          return (
+            <Card key={index} className="shadow-soft">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
+                    <p className="text-2xl font-bold text-primary">{metric.value}</p>
+                    <p className={`text-xs flex items-center gap-1 mt-1 ${
+                      metric.change > 0 ? 'text-hse-success' : 'text-hse-danger'
+                    }`}>
+                      {metric.change > 0 ? '+' : ''}{metric.change}% نسبت به ماه قبل
+                    </p>
+                  </div>
+                  <div className={`w-12 h-12 rounded-lg bg-${metric.color}/10 flex items-center justify-center`}>
+                    <Icon className={`w-6 h-6 text-${metric.color}`} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Charts Row 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              روند حوادث و حوادث نزدیک
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={incidentTrendsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="incidents" stroke="hsl(var(--hse-danger))" strokeWidth={2} name="حوادث" />
+                  <Line type="monotone" dataKey="nearMisses" stroke="hsl(var(--hse-warning))" strokeWidth={2} name="نزدیک به حادثه" />
+                  <Line type="monotone" dataKey="accidents" stroke="hsl(var(--destructive))" strokeWidth={2} name="حوادث جدی" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              توزیع سطح ریسک
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={riskDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {riskDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              آمار بخش‌ها
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={departmentData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="department" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="incidents" fill="hsl(var(--hse-danger))" name="حوادث" />
+                  <Bar dataKey="training" fill="hsl(var(--hse-info))" name="آموزش‌ها" />
+                  <Bar dataKey="compliance" fill="hsl(var(--hse-success))" name="رعایت قوانین %" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              اثربخشی آموزش‌ها
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trainingData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="beforeTraining" stroke="hsl(var(--hse-danger))" strokeWidth={2} name="قبل از آموزش" />
+                  <Line type="monotone" dataKey="afterTraining" stroke="hsl(var(--hse-success))" strokeWidth={2} name="بعد از آموزش" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Summary Table */}
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle>خلاصه آماری ماهانه</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ماه</TableHead>
+                <TableHead>حوادث</TableHead>
+                <TableHead>آموزش‌ها</TableHead>
+                <TableHead>مجوزها</TableHead>
+                <TableHead>ارزیابی‌ها</TableHead>
+                <TableHead>نرخ ایمنی</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {incidentTrendsData.map((data, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{data.month}</TableCell>
+                  <TableCell>{data.incidents}</TableCell>
+                  <TableCell>{Math.floor(Math.random() * 10) + 5}</TableCell>
+                  <TableCell>{Math.floor(Math.random() * 15) + 10}</TableCell>
+                  <TableCell>{Math.floor(Math.random() * 8) + 3}</TableCell>
+                  <TableCell>
+                    <Badge className={`${(95 - data.incidents) > 90 ? 'bg-hse-success/10 text-hse-success' : 'bg-hse-warning/10 text-hse-warning'}`}>
+                      {95 - data.incidents}%
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// AI Insights Content Component
+const AIInsightsContent = ({ incidents, ergonomicAssessments, riskAssessments, analyzeErgonomics }) => {
+  // AI Analysis Functions
+  const generateIncidentPattern = () => {
+    const patterns = [
+      {
+        title: 'الگوی زمانی حوادث',
+        insight: 'بیشترین حوادث در ساعات 10-12 صبح و 14-16 بعدازظهر رخ می‌دهد',
+        recommendation: 'افزایش نظارت در این بازه‌های زمانی',
+        confidence: 87,
+        type: 'temporal'
+      },
+      {
+        title: 'نقاط حادثه‌خیز',
+        insight: 'سالن تولید A بیشترین آمار حوادث را دارد (45% کل حوادث)',
+        recommendation: 'بررسی شرایط ایمنی و بازآموزی کارکنان این بخش',
+        confidence: 92,
+        type: 'location'
+      },
+      {
+        title: 'عوامل انسانی',
+        insight: 'خستگی و عدم تمرکز عامل 60% حوادث شناسایی شده است',
+        recommendation: 'برنامه‌ریزی استراحت‌های مناسب و کاهش اضافه‌کاری',
+        confidence: 78,
+        type: 'human'
+      }
+    ];
+    return patterns;
+  };
+
+  const generateErgonomicInsights = () => {
+    return ergonomicAssessments.map(assessment => ({
+      ...assessment,
+      aiAnalysis: analyzeErgonomics(assessment)
+    }));
+  };
+
+  const generatePredictiveAlerts = () => {
+    return [
+      {
+        id: 1,
+        type: 'ریسک بالا',
+        message: 'احتمال وقوع حادثه در بخش جوشکاری طی هفته آینده بالا است',
+        probability: 73,
+        factors: ['افزایش حجم کار', 'کاهش نظارت', 'خستگی کارکنان'],
+        urgency: 'high'
+      },
+      {
+        id: 2,
+        type: 'نیاز به آموزش',
+        message: 'کارکنان بخش انبار نیاز به بازآموزی ایمنی دارند',
+        probability: 68,
+        factors: ['افزایش تخلفات جزئی', 'کاهش استفاده از PPE'],
+        urgency: 'medium'
+      },
+      {
+        id: 3,
+        type: 'تعمیرات پیشگیرانه',
+        message: 'تجهیزات حفاظتی خط تولید 2 نیاز به بررسی دارند',
+        probability: 82,
+        factors: ['گذشت زمان از آخرین سرویس', 'گزارش‌های اخیر عملکرد'],
+        urgency: 'high'
+      }
+    ];
+  };
+
+  const patterns = generateIncidentPattern();
+  const ergonomicInsights = generateErgonomicInsights();
+  const alerts = generatePredictiveAlerts();
+
+  const getUrgencyColor = (urgency) => {
+    switch (urgency) {
+      case 'high': return 'hse-danger';
+      case 'medium': return 'hse-warning';
+      case 'low': return 'hse-success';
+      default: return 'primary';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-primary flex items-center gap-3">
+            <Brain className="w-8 h-8" />
+            تحلیل هوش مصنوعی HSE
+          </h2>
+          <p className="text-muted-foreground">بینش‌های هوشمند و پیش‌بینی‌های ایمنی</p>
+        </div>
+        <Badge className="bg-gradient-primary text-white px-4 py-2">
+          <Zap className="w-4 h-4 ml-2" />
+          AI Powered
+        </Badge>
+      </div>
+
+      {/* Predictive Alerts */}
+      <Card className="shadow-soft border-l-4 border-l-hse-warning">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-hse-warning">
+            <AlertTriangle className="w-5 h-5" />
+            هشدارهای پیش‌بینانه
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {alerts.map((alert) => (
+              <div key={alert.id} className={`p-4 rounded-lg border border-${getUrgencyColor(alert.urgency)}/20 bg-${getUrgencyColor(alert.urgency)}/5`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge className={`bg-${getUrgencyColor(alert.urgency)}/10 text-${getUrgencyColor(alert.urgency)}`}>
+                        {alert.type}
+                      </Badge>
+                      <span className="text-sm font-medium">احتمال: {alert.probability}%</span>
+                    </div>
+                    <p className="text-sm font-medium mb-2">{alert.message}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {alert.factors.map((factor, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {factor}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <Button size="sm" className={`bg-${getUrgencyColor(alert.urgency)} text-white`}>
+                    اقدام
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pattern Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {patterns.map((pattern, index) => (
+          <Card key={index} className="shadow-soft">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Brain className="w-5 h-5 text-primary" />
+                {pattern.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="p-3 bg-secondary/30 rounded-lg">
+                <p className="text-sm font-medium mb-2">تحلیل:</p>
+                <p className="text-sm text-muted-foreground">{pattern.insight}</p>
+              </div>
+              <div className="p-3 bg-hse-info/10 rounded-lg">
+                <p className="text-sm font-medium mb-2 text-hse-info">توصیه:</p>
+                <p className="text-sm">{pattern.recommendation}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">اعتماد AI:</span>
+                <Badge className={`${pattern.confidence > 80 ? 'bg-hse-success/10 text-hse-success' : 'bg-hse-warning/10 text-hse-warning'}`}>
+                  {pattern.confidence}%
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Ergonomic AI Analysis */}
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            تحلیل هوشمند ارگونومی
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {ergonomicInsights.slice(0, 3).map((assessment, index) => (
+              <div key={index} className="p-4 rounded-lg border border-border">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-medium">{assessment.employeeName}</h4>
+                    <p className="text-sm text-muted-foreground">{assessment.department} - {assessment.position}</p>
+                  </div>
+                  <Badge className={`bg-${assessment.riskLevel === 'بالا' ? 'hse-danger' : assessment.riskLevel === 'متوسط' ? 'hse-warning' : 'hse-success'}/10 text-${assessment.riskLevel === 'بالا' ? 'hse-danger' : assessment.riskLevel === 'متوسط' ? 'hse-warning' : 'hse-success'}`}>
+                    {assessment.riskLevel}
+                  </Badge>
+                </div>
+                
+                <div className="bg-secondary/20 p-3 rounded-lg mb-3">
+                  <p className="text-sm font-medium mb-1">تحلیل AI:</p>
+                  <p className="text-sm text-muted-foreground">{assessment.aiAnalysis?.explanation}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-sm font-medium mb-2">توصیه‌های هوشمند:</p>
+                    <ul className="text-sm space-y-1">
+                      {assessment.aiAnalysis?.recommendations.slice(0, 2).map((rec, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle className="w-3 h-3 text-hse-success mt-0.5 flex-shrink-0" />
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-2">اقدامات پیشگیرانه:</p>
+                    <ul className="text-sm space-y-1">
+                      {assessment.aiAnalysis?.preventiveMeasures.slice(0, 2).map((measure, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Shield className="w-3 h-3 text-hse-info mt-0.5 flex-shrink-0" />
+                          {measure}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Risk Prediction Matrix */}
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            ماتریس پیش‌بینی ریسک
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { area: 'سالن تولید A', risk: 85, trend: 'افزایشی', factors: ['حجم کار بالا', 'کمبود نیرو'] },
+              { area: 'تعمیرگاه', risk: 45, trend: 'ثابت', factors: ['تجهیزات قدیمی', 'آموزش کافی'] },
+              { area: 'انبار مواد', risk: 62, trend: 'کاهشی', factors: ['بهبود سیستم‌ها', 'آموزش اخیر'] }
+            ].map((area, index) => (
+              <div key={index} className="p-4 rounded-lg border border-border">
+                <h4 className="font-medium mb-2">{area.area}</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">امتیاز ریسک:</span>
+                    <Badge className={`${area.risk > 70 ? 'bg-hse-danger/10 text-hse-danger' : area.risk > 50 ? 'bg-hse-warning/10 text-hse-warning' : 'bg-hse-success/10 text-hse-success'}`}>
+                      {area.risk}%
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">روند:</span>
+                    <span className={`text-sm ${area.trend === 'افزایشی' ? 'text-hse-danger' : area.trend === 'کاهشی' ? 'text-hse-success' : 'text-muted-foreground'}`}>
+                      {area.trend}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">عوامل موثر:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {area.factors.map((factor, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          {factor}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Settings Content Component
+const SettingsContent = ({ currentUser, users, setUsers }) => {
+  const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
+  const [systemSettings, setSystemSettings] = useState({
+    autoNotifications: true,
+    emailReports: true,
+    darkMode: false,
+    language: 'fa',
+    timezone: 'Asia/Tehran',
+    autoBackup: true,
+    reportFrequency: 'daily',
+    alertThreshold: 'medium'
+  });
+
+  const handleSystemSettingChange = (key, value) => {
+    setSystemSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleUserStatusToggle = (userId) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, active: !user.active } : user
+    ));
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-primary flex items-center gap-3">
+            <Settings className="w-8 h-8" />
+            تنظیمات سیستم
+          </h2>
+          <p className="text-muted-foreground">مدیریت تنظیمات و پیکربندی سیستم</p>
+        </div>
+      </div>
+
+      {/* Settings Tabs */}
+      <Card className="shadow-soft">
+        <CardContent className="p-0">
+          <Tabs value={activeSettingsTab} onValueChange={setActiveSettingsTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="profile">پروفایل</TabsTrigger>
+              <TabsTrigger value="system">سیستم</TabsTrigger>
+              <TabsTrigger value="notifications">اعلانات</TabsTrigger>
+              <TabsTrigger value="security">امنیت</TabsTrigger>
+            </TabsList>
+
+            {/* Profile Settings */}
+            <TabsContent value="profile" className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">اطلاعات پروفایل</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>نام کاربری</Label>
+                    <Input value={currentUser?.username || ''} disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>نام کامل</Label>
+                    <Input value={currentUser?.name || ''} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ایمیل</Label>
+                    <Input value={currentUser?.email || ''} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>تلفن</Label>
+                    <Input value={currentUser?.phone || ''} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>بخش</Label>
+                    <Select value={currentUser?.department || ''}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="HSE">HSE</SelectItem>
+                        <SelectItem value="مدیریت">مدیریت</SelectItem>
+                        <SelectItem value="تولید">تولید</SelectItem>
+                        <SelectItem value="نگهداری">نگهداری</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>نقش</Label>
+                    <Input value={currentUser?.role === 'manager' ? 'مدیر سیستم' : currentUser?.role === 'hse_engineer' ? 'مهندس HSE' : 'افسر ایمنی'} disabled />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <Button className="bg-gradient-primary">ذخیره تغییرات</Button>
+                  <Button variant="outline">تغییر رمز عبور</Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* System Settings */}
+            <TabsContent value="system" className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">تنظیمات عمومی سیستم</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div>
+                      <h4 className="font-medium">حالت تاریک</h4>
+                      <p className="text-sm text-muted-foreground">فعالسازی ظاهر تاریک سیستم</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={systemSettings.darkMode}
+                      onChange={(e) => handleSystemSettingChange('darkMode', e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div>
+                      <h4 className="font-medium">پشتیبان‌گیری خودکار</h4>
+                      <p className="text-sm text-muted-foreground">پشتیبان‌گیری روزانه از اطلاعات</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={systemSettings.autoBackup}
+                      onChange={(e) => handleSystemSettingChange('autoBackup', e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                  </div>
+
+                  <div className="p-4 rounded-lg border border-border">
+                    <h4 className="font-medium mb-2">فرکانس گزارش‌گیری</h4>
+                    <Select value={systemSettings.reportFrequency} onValueChange={(value) => handleSystemSettingChange('reportFrequency', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hourly">ساعتی</SelectItem>
+                        <SelectItem value="daily">روزانه</SelectItem>
+                        <SelectItem value="weekly">هفتگی</SelectItem>
+                        <SelectItem value="monthly">ماهانه</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="p-4 rounded-lg border border-border">
+                    <h4 className="font-medium mb-2">آستانه هشدار</h4>
+                    <Select value={systemSettings.alertThreshold} onValueChange={(value) => handleSystemSettingChange('alertThreshold', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">کم</SelectItem>
+                        <SelectItem value="medium">متوسط</SelectItem>
+                        <SelectItem value="high">بالا</SelectItem>
+                        <SelectItem value="critical">بحرانی</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Notifications Settings */}
+            <TabsContent value="notifications" className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">تنظیمات اعلانات</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div>
+                      <h4 className="font-medium">اعلانات خودکار</h4>
+                      <p className="text-sm text-muted-foreground">دریافت اعلانات برای رویدادهای مهم</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={systemSettings.autoNotifications}
+                      onChange={(e) => handleSystemSettingChange('autoNotifications', e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div>
+                      <h4 className="font-medium">گزارش‌های ایمیلی</h4>
+                      <p className="text-sm text-muted-foreground">ارسال گزارش‌های دوره‌ای به ایمیل</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={systemSettings.emailReports}
+                      onChange={(e) => handleSystemSettingChange('emailReports', e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium">انواع اعلانات:</h4>
+                    {[
+                      { id: 'incidents', label: 'حوادث جدید', enabled: true },
+                      { id: 'permits', label: 'مجوزهای منقضی شده', enabled: true },
+                      { id: 'training', label: 'یادآوری آموزش‌ها', enabled: false },
+                      { id: 'maintenance', label: 'تعمیرات دوره‌ای', enabled: true }
+                    ].map((notification) => (
+                      <div key={notification.id} className="flex items-center justify-between p-3 rounded border border-border">
+                        <span className="text-sm">{notification.label}</span>
+                        <input
+                          type="checkbox"
+                          defaultChecked={notification.enabled}
+                          className="w-4 h-4"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Security Settings */}
+            <TabsContent value="security" className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">تنظیمات امنیتی</h3>
+                
+                {/* User Management */}
+                <div className="mb-6">
+                  <h4 className="font-medium mb-3">مدیریت کاربران</h4>
+                  <div className="space-y-3">
+                    {users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{user.name}</p>
+                            <p className="text-xs text-muted-foreground">{user.role} - {user.department}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${user.active ? 'bg-hse-success/10 text-hse-success' : 'bg-muted text-muted-foreground'}`}>
+                            {user.active ? 'فعال' : 'غیرفعال'}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleUserStatusToggle(user.id)}
+                            className={user.active ? 'text-hse-danger' : 'text-hse-success'}
+                          >
+                            {user.active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Security Policies */}
+                <div>
+                  <h4 className="font-medium mb-3">خط‌مشی‌های امنیتی</h4>
+                  <div className="space-y-3">
+                    {[
+                      { policy: 'قفل خودکار پس از عدم فعالیت', value: '30 دقیقه', enabled: true },
+                      { policy: 'تعداد تلاش‌های ورود', value: '3 بار', enabled: true },
+                      { policy: 'پیچیدگی رمز عبور', value: 'بالا', enabled: true },
+                      { policy: 'تغییر اجباری رمز عبور', value: '90 روز', enabled: false }
+                    ].map((policy, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded border border-border">
+                        <div>
+                          <p className="text-sm font-medium">{policy.policy}</p>
+                          <p className="text-xs text-muted-foreground">{policy.value}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          defaultChecked={policy.enabled}
+                          className="w-4 h-4"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
