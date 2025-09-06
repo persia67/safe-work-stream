@@ -40,6 +40,8 @@ import {
   Phone
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import HealthExaminationsContent from './HealthExaminationsContent';
+import EditableSettingsContent from './EditableSettingsContent';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -913,8 +915,11 @@ const HSEManagementPanel = () => {
                 analyzeErgonomics={analyzeErgonomics}
               />
             )}
+            {activeTab === 'health-exams' && (
+              <HealthExaminationsContent />
+            )}
             {activeTab === 'settings' && (
-              <SettingsContent 
+              <EditableSettingsContent 
                 currentUser={currentUser}
                 users={users}
                 setUsers={setUsers}

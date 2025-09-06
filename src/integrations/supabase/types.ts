@@ -162,6 +162,84 @@ export type Database = {
           },
         ]
       }
+      health_examinations: {
+        Row: {
+          ai_analysis: Json | null
+          blood_pressure: string | null
+          created_at: string
+          created_by: string | null
+          department: string
+          employee_id: string
+          employee_name: string
+          examination_date: string
+          examination_type: string
+          examiner_name: string
+          exposure_risks: Json | null
+          fitness_for_work: string
+          health_recommendations: Json | null
+          health_trends: Json | null
+          hearing_test_result: string | null
+          id: string
+          musculoskeletal_assessment: string | null
+          next_examination_date: string | null
+          position: string
+          respiratory_function: string | null
+          status: string | null
+          updated_at: string
+          vision_test_result: string | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          blood_pressure?: string | null
+          created_at?: string
+          created_by?: string | null
+          department: string
+          employee_id: string
+          employee_name: string
+          examination_date: string
+          examination_type?: string
+          examiner_name: string
+          exposure_risks?: Json | null
+          fitness_for_work?: string
+          health_recommendations?: Json | null
+          health_trends?: Json | null
+          hearing_test_result?: string | null
+          id?: string
+          musculoskeletal_assessment?: string | null
+          next_examination_date?: string | null
+          position: string
+          respiratory_function?: string | null
+          status?: string | null
+          updated_at?: string
+          vision_test_result?: string | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          blood_pressure?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string
+          employee_id?: string
+          employee_name?: string
+          examination_date?: string
+          examination_type?: string
+          examiner_name?: string
+          exposure_risks?: Json | null
+          fitness_for_work?: string
+          health_recommendations?: Json | null
+          health_trends?: Json | null
+          hearing_test_result?: string | null
+          id?: string
+          musculoskeletal_assessment?: string | null
+          next_examination_date?: string | null
+          position?: string
+          respiratory_function?: string | null
+          status?: string | null
+          updated_at?: string
+          vision_test_result?: string | null
+        }
+        Relationships: []
+      }
       incidents: {
         Row: {
           created_at: string
