@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import moment from 'moment-jalaali';
+import DatePicker from 'react-persian-calendar-date-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,10 +95,23 @@ const HealthExaminationsContent = () => {
 
   const handleSave = async () => {
     try {
+      // Validate required fields
+      if (!formData.employee_name || !formData.employee_id || 
+          !formData.department || !formData.position ||
+          !formData.examination_date || !formData.examiner_name) {
+        toast({ 
+          title: "خطا", 
+          description: "لطفا تمام فیلدهای الزامی را پر کنید",
+          variant: "destructive" 
+        });
+        return;
+      }
+
       const dataToSave = {
         ...formData,
         exposure_risks: formData.exposure_risks.length > 0 ? formData.exposure_risks : null,
-        health_recommendations: formData.health_recommendations.length > 0 ? formData.health_recommendations : null
+        health_recommendations: formData.health_recommendations.length > 0 ? formData.health_recommendations : null,
+        next_examination_date: formData.next_examination_date || null
       };
 
       if (editingExam) {
@@ -362,12 +377,15 @@ const HealthExaminationsContent = () => {
                       <SelectValue placeholder="انتخاب بخش" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="خط تولید A">خط تولید A</SelectItem>
-                      <SelectItem value="خط تولید B">خط تولید B</SelectItem>
-                      <SelectItem value="انبار">انبار</SelectItem>
-                      <SelectItem value="نگهداری">نگهداری</SelectItem>
-                      <SelectItem value="کنترل کیفیت">کنترل کیفیت</SelectItem>
+                      <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
+                      <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
+                      <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
+                      <SelectItem value="جوشکاری">جوشکاری</SelectItem>
+                      <SelectItem value="شیت کن">شیت کن</SelectItem>
+                      <SelectItem value="تاسیسات">تاسیسات</SelectItem>
+                      <SelectItem value="تعمیرات">تعمیرات</SelectItem>
                       <SelectItem value="اداری">اداری</SelectItem>
+                      <SelectItem value="HSE">HSE</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -380,11 +398,21 @@ const HealthExaminationsContent = () => {
                 </div>
                 <div>
                   <Label>تاریخ معاینه</Label>
-                  <Input
-                    type="date"
-                    value={formData.examination_date}
-                    onChange={(e) => setFormData({...formData, examination_date: e.target.value})}
-                  />
+                  <div className="w-full">
+                    <DatePicker
+                      value={formData.examination_date ? moment(formData.examination_date).format('jYYYY/jM/jD') : ''}
+                      onChange={(dateString: string) => {
+                        if (dateString) {
+                          const gregorianDate = moment(dateString, 'jYYYY/jM/jD').format('YYYY-MM-DD');
+                          setFormData({...formData, examination_date: gregorianDate});
+                        }
+                      }}
+                      locale="fa"
+                      shouldHighlightWeekends
+                      inputPlaceholder="انتخاب تاریخ"
+                      inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label>نام پزشک معاینه‌کننده</Label>
