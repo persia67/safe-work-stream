@@ -345,6 +345,7 @@ const HSEManagementPanel = () => {
       { id: 'permits', icon: FileText, label: 'مجوزهای کار', roles: ['manager', 'hse_engineer', 'safety_officer'] },
       { id: 'reports', icon: PenTool, label: 'گزارش‌های روزانه', roles: ['safety_officer', 'hse_engineer', 'manager'] },
       { id: 'risk', icon: Shield, label: 'ارزیابی ریسک', roles: ['manager', 'hse_engineer', 'safety_officer'] },
+      { id: 'health-examinations', icon: User, label: 'معاینات طب کار', roles: ['manager', 'hse_engineer', 'safety_officer'] },
       { id: 'analytics', icon: BarChart3, label: 'تحلیل و آمار', roles: ['manager', 'hse_engineer'] },
       { id: 'ai-insights', icon: Brain, label: 'تحلیل هوش مصنوعی', roles: ['manager', 'hse_engineer'] },
       { id: 'settings', icon: Settings, label: 'تنظیمات', roles: ['manager'] }
@@ -691,7 +692,7 @@ const HSEManagementPanel = () => {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-primary">سیستم مدیریت HSE</CardTitle>
-              <CardDescription className="text-base mt-2">گوره صنعتی دانیال استیل</CardDescription>
+              <CardDescription className="text-base mt-2">گروه صنعتی دانیال استیل</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -761,7 +762,7 @@ const HSEManagementPanel = () => {
               </div>
               <div>
                 <h1 className="font-bold text-lg text-primary">HSE Management</h1>
-                <p className="text-xs text-muted-foreground">گوره صنعتی دانیال استیل</p>
+                <p className="text-xs text-muted-foreground">گروه صنعتی دانیال استیل</p>
               </div>
             </div>
           </div>
@@ -915,7 +916,7 @@ const HSEManagementPanel = () => {
                 analyzeErgonomics={analyzeErgonomics}
               />
             )}
-            {activeTab === 'health-exams' && (
+            {activeTab === 'health-examinations' && (
               <HealthExaminationsContent />
             )}
             {activeTab === 'settings' && (

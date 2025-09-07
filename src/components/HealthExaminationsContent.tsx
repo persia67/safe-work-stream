@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Plus, Search, Eye, Edit, Trash2, TrendingUp, AlertTriangle, Activity, Brain, Calendar, User, Stethoscope } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, TrendingUp, AlertTriangle, Activity, Brain, Calendar, User, Stethoscope, BarChart3, Target, CheckCircle } from 'lucide-react';
 
 interface HealthExamination {
   id: string;
@@ -155,27 +155,117 @@ const HealthExaminationsContent = () => {
   const generateAIAnalysis = async (departmentData: HealthExamination[]) => {
     setAiAnalysisLoading(true);
     try {
-      // Simulate AI analysis
+      // Enhanced AI analysis simulation
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      const totalExams = departmentData.length;
+      
+      // Comprehensive health analysis
       const hearingIssues = departmentData.filter(exam => 
         exam.hearing_test_result && !exam.hearing_test_result.includes('نرمال')
       ).length;
       
-      const totalExams = departmentData.length;
+      const visionIssues = departmentData.filter(exam => 
+        exam.vision_test_result && exam.vision_test_result.includes('ضعیف')
+      ).length;
+      
+      const respiratoryIssues = departmentData.filter(exam => 
+        exam.respiratory_function && exam.respiratory_function.includes('ضعیف')
+      ).length;
+      
+      const musculoskeletalIssues = departmentData.filter(exam => 
+        exam.musculoskeletal_assessment && exam.musculoskeletal_assessment.includes('درد')
+      ).length;
+      
+      const hypertensionCases = departmentData.filter(exam => 
+        exam.blood_pressure && exam.blood_pressure.includes('بالا')
+      ).length;
+      
       const hearingIssuePercentage = totalExams > 0 ? (hearingIssues / totalExams) * 100 : 0;
+      const visionIssuePercentage = totalExams > 0 ? (visionIssues / totalExams) * 100 : 0;
+      const respiratoryIssuePercentage = totalExams > 0 ? (respiratoryIssues / totalExams) * 100 : 0;
+      const musculoskeletalIssuePercentage = totalExams > 0 ? (musculoskeletalIssues / totalExams) * 100 : 0;
+      const hypertensionPercentage = totalExams > 0 ? (hypertensionCases / totalExams) * 100 : 0;
+      
+      // Risk level calculation
+      let riskLevel = 'پایین';
+      let criticalIssues = [];
+      
+      if (hearingIssuePercentage > 30) {
+        riskLevel = 'بحرانی';
+        criticalIssues.push(`آسیب شنوایی: ${hearingIssuePercentage.toFixed(1)}%`);
+      }
+      
+      if (respiratoryIssuePercentage > 20) {
+        riskLevel = 'بحرانی';
+        criticalIssues.push(`مشکلات تنفسی: ${respiratoryIssuePercentage.toFixed(1)}%`);
+      }
+      
+      if (visionIssuePercentage > 25) {
+        riskLevel = 'بالا';
+        criticalIssues.push(`مشکلات بینایی: ${visionIssuePercentage.toFixed(1)}%`);
+      }
       
       let analysis = {
-        summary: `تحلیل ${totalExams} معاینه در این بخش`,
+        summary: `تحلیل جامع ${totalExams} معاینه - سطح ریسک: ${riskLevel}`,
         hearingIssueRate: hearingIssuePercentage,
-        recommendations: []
+        visionIssueRate: visionIssuePercentage,
+        respiratoryIssueRate: respiratoryIssuePercentage,
+        musculoskeletalIssueRate: musculoskeletalIssuePercentage,
+        hypertensionRate: hypertensionPercentage,
+        riskLevel: riskLevel,
+        criticalIssues: criticalIssues,
+        recommendations: [],
+        priorityActions: [],
+        workplaceCorrelations: []
       };
 
+      // Generate comprehensive recommendations
       if (hearingIssuePercentage > 30) {
-        analysis.recommendations.push('نصب تجهیزات کاهش صدا در خط تولید');
-        analysis.recommendations.push('ارائه تجهیزات حفاظت شنوایی پیشرفته');
-        analysis.recommendations.push('آموزش کارکنان در زمینه محافظت از شنوایی');
+        analysis.recommendations.push('🚨 اولویت فوری: نصب سیستم‌های کنترل صوت و عایق‌بندی');
+        analysis.recommendations.push('توزیع فوری گوشی‌های ایمنی با استاندارد NRR 30+');
+        analysis.recommendations.push('آموزش اجباری محافظت شنوایی برای تمام پرسنل');
+        analysis.priorityActions.push('تعطیل موقت فعالیت‌های پرسروصدا تا رفع مشکل');
+      } else if (hearingIssuePercentage > 15) {
+        analysis.recommendations.push('⚠️ بازنگری سیستم‌های کنترل صوت موجود');
+        analysis.recommendations.push('افزایش تعداد استراحت‌ها در محیط‌های پرسروصدا');
       }
+
+      if (respiratoryIssuePercentage > 20) {
+        analysis.recommendations.push('🚨 نصب فوری سیستم تهویه مکانیکی');
+        analysis.recommendations.push('کنترل منابع گرد و غبار و آلودگی هوا');
+        analysis.recommendations.push('تامین ماسک‌های N95 برای تمام پرسنل');
+        analysis.priorityActions.push('ارزیابی فوری کیفیت هوای محیط کار');
+      }
+
+      if (visionIssuePercentage > 25) {
+        analysis.recommendations.push('🚨 بهبود فوری سیستم روشنایی (حداقل 500 لوکس)');
+        analysis.recommendations.push('تامین عینک ایمنی با کیفیت بالا');
+      }
+
+      if (musculoskeletalIssuePercentage > 30) {
+        analysis.recommendations.push('⚠️ ارزیابی ارگونومیک کامل محل‌های کار');
+        analysis.recommendations.push('آموزش تکنیک‌های صحیح کار و حمل بار');
+      }
+
+      if (hypertensionPercentage > 15) {
+        analysis.recommendations.push('⚠️ برنامه مدیریت استرس شغلی');
+        analysis.recommendations.push('کاهش ساعات اضافه‌کاری');
+      }
+
+      // Workplace correlations
+      const departmentName = departmentData[0]?.department || 'نامشخص';
+      if (departmentName.includes('تولید')) {
+        analysis.workplaceCorrelations.push('محیط تولیدی: ارتباط مستقیم بین سر و صدا و آسیب شنوایی');
+        analysis.workplaceCorrelations.push('کارگران خط تولید: احتمال بالاتر مشکلات اسکلتی-عضلانی');
+      }
+
+      if (departmentName === 'انبار') {
+        analysis.workplaceCorrelations.push('کارکنان انبار: ریسک بالای آسیب‌های مرتبط با بلند کردن بار');
+      }
+
+      analysis.workplaceCorrelations.push('شیفت‌های طولانی: ارتباط با افزایش فشار خون');
+      analysis.workplaceCorrelations.push('محیط‌های غبارآلود: تأثیر مستقیم بر عملکرد تنفسی');
 
       return analysis;
     } finally {
@@ -434,33 +524,163 @@ const HealthExaminationsContent = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="w-5 h-5" />
-              تحلیل هوش مصنوعی
+              تحلیل هوش مصنوعی پیشرفته
             </CardTitle>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => generateAIAnalysis(examinations)}
+                disabled={aiAnalysisLoading}
+              >
+                <Brain className="w-4 h-4 mr-2" />
+                تحلیل کامل
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const productionExams = examinations.filter(e => 
+                    e.department.includes('تولید')
+                  );
+                  if (productionExams.length > 0) {
+                    generateAIAnalysis(productionExams);
+                  }
+                }}
+                disabled={aiAnalysisLoading}
+              >
+                تحلیل خطوط تولید
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {aiAnalysisLoading ? (
               <div className="flex items-center justify-center h-32">
-                <div className="text-sm text-muted-foreground">در حال تحلیل...</div>
+                <div className="animate-pulse text-sm text-muted-foreground">
+                  در حال تحلیل داده‌های سلامت با هوش مصنوعی...
+                </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                {chartData.filter(item => item.hearingIssueRate > 30).map(item => (
-                  <div key={item.department} className="p-3 bg-hse-danger/10 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className="w-4 h-4 text-hse-danger" />
-                      <span className="font-medium text-sm">{item.department}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      نرخ آسیب شنوایی: {item.hearingIssueRate.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-hse-danger mt-1">
-                      توصیه: نصب تجهیزات کاهش صدا ضروری است
-                    </p>
+              <div className="space-y-6">
+                {/* Critical Alerts */}
+                {chartData.some(item => item.hearingIssueRate > 30) && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-destructive" />
+                      هشدارهای بحرانی
+                    </h4>
+                    {chartData.filter(item => item.hearingIssueRate > 30).map(item => (
+                      <div key={item.department} className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="w-4 h-4 text-destructive" />
+                          <span className="font-medium text-sm">{item.department} - وضعیت بحرانی</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <p className="text-muted-foreground">آسیب شنوایی: <span className="text-destructive font-medium">{item.hearingIssueRate.toFixed(1)}%</span></p>
+                            <p className="text-muted-foreground">کل پرسنل: {item.total} نفر</p>
+                          </div>
+                          <div>
+                            <p className="text-destructive font-medium">اقدامات فوری:</p>
+                            <ul className="list-disc list-inside text-destructive text-xs space-y-1 mt-1">
+                              <li>تعطیل موقت فعالیت‌های پرسروصدا</li>
+                              <li>نصب فوری عایق صوتی</li>
+                              <li>توزیع گوشی ایمنی NRR 30+</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {chartData.every(item => item.hearingIssueRate <= 30) && (
-                  <div className="text-center text-sm text-hse-success">
-                    وضعیت سلامت پرسنل در حد مطلوب است
+                )}
+
+                {/* Department Analysis */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-primary" />
+                    تحلیل بخش‌های کاری
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {chartData.map(item => (
+                      <div key={item.department} className={`p-3 rounded-lg border ${
+                        item.hearingIssueRate > 30 ? 'bg-destructive/5 border-destructive/20' :
+                        item.hearingIssueRate > 15 ? 'bg-warning/5 border-warning/20' :
+                        'bg-success/5 border-success/20'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm">{item.department}</span>
+                          <Badge variant={
+                            item.hearingIssueRate > 30 ? 'destructive' :
+                            item.hearingIssueRate > 15 ? 'secondary' : 'default'
+                          }>
+                            {item.hearingIssueRate > 30 ? 'بحرانی' :
+                             item.hearingIssueRate > 15 ? 'ریسک بالا' : 'ایمن'}
+                          </Badge>
+                        </div>
+                        <div className="text-xs space-y-1">
+                          <p>آسیب شنوایی: {item.hearingIssueRate.toFixed(1)}% ({item.hearingIssues}/{item.total})</p>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${
+                                item.hearingIssueRate > 30 ? 'bg-destructive' :
+                                item.hearingIssueRate > 15 ? 'bg-warning' : 'bg-success'
+                              }`}
+                              style={{ width: `${Math.min(item.hearingIssueRate, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Recommendations */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Target className="w-4 h-4 text-primary" />
+                    توصیه‌های هوش مصنوعی
+                  </h4>
+                  <div className="space-y-2">
+                    {chartData.some(item => item.hearingIssueRate > 30) && (
+                      <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                        <p className="text-sm font-medium text-primary mb-2">🎯 اولویت اول: کنترل آسیب شنوایی</p>
+                        <ul className="text-xs space-y-1 text-muted-foreground">
+                          <li>• ارزیابی فوری سطح صوت در محیط‌های تولیدی</li>
+                          <li>• نصب سیستم‌های عایق صوتی در خطوط تولید</li>
+                          <li>• برنامه چرخش کاری برای کاهش زمان مواجهه</li>
+                          <li>• آموزش اجباری محافظت شنوایی</li>
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="p-3 bg-muted/30 rounded-lg">
+                      <p className="text-sm font-medium mb-2">📊 تحلیل الگوها</p>
+                      <ul className="text-xs space-y-1 text-muted-foreground">
+                        <li>• خطوط تولید: بالاترین نرخ آسیب شنوایی ({chartData.find(i => i.department.includes('تولید'))?.hearingIssueRate.toFixed(1) || 0}%)</li>
+                        <li>• ارتباط مستقیم بین سر و صدای محیط و سلامت شنوایی</li>
+                        <li>• نیاز به بررسی عوامل محیطی اضافی (گرد و غبار، شیمیایی)</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="p-3 bg-info/5 border border-info/20 rounded-lg">
+                      <p className="text-sm font-medium text-info mb-2">💡 پیشنهادات بهبود</p>
+                      <ul className="text-xs space-y-1 text-muted-foreground">
+                        <li>• پیاده‌سازی سیستم نظارت مداوم سلامت</li>
+                        <li>• معاینات ماهانه برای پرسنل پرخطر</li>
+                        <li>• استفاده از تکنولوژی IoT برای نظارت محیطی</li>
+                        <li>• برنامه تشویقی برای رعایت قوانین ایمنی</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Safe Status */}
+                {chartData.every(item => item.hearingIssueRate <= 15) && (
+                  <div className="text-center p-4 bg-success/10 border border-success/20 rounded-lg">
+                    <CheckCircle className="w-8 h-8 text-success mx-auto mb-2" />
+                    <p className="text-sm font-medium text-success">وضعیت سلامت پرسنل در حد مطلوب است</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ادامه برنامه‌های پیشگیرانه و نظارت دوره‌ای توصیه می‌شود
+                    </p>
                   </div>
                 )}
               </div>
