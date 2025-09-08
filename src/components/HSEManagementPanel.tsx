@@ -42,6 +42,8 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import HealthExaminationsContent from './HealthExaminationsContent';
 import EditableSettingsContent from './EditableSettingsContent';
+import { SafetyTrainingContent } from './SafetyTrainingContent';
+import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -346,6 +348,7 @@ const HSEManagementPanel = () => {
       { id: 'reports', icon: PenTool, label: 'گزارش‌های روزانه', roles: ['safety_officer', 'hse_engineer', 'manager'] },
       { id: 'risk', icon: Shield, label: 'ارزیابی ریسک', roles: ['manager', 'hse_engineer', 'safety_officer'] },
       { id: 'health-examinations', icon: User, label: 'معاینات طب کار', roles: ['manager', 'hse_engineer', 'safety_officer'] },
+      { id: 'safety-training', icon: Users, label: 'آموزش‌های ایمنی', roles: ['manager', 'hse_engineer', 'safety_officer'] },
       { id: 'analytics', icon: BarChart3, label: 'تحلیل و آمار', roles: ['manager', 'hse_engineer'] },
       { id: 'ai-insights', icon: Brain, label: 'تحلیل هوش مصنوعی', roles: ['manager', 'hse_engineer'] },
       { id: 'settings', icon: Settings, label: 'تنظیمات', roles: ['manager'] }
@@ -882,13 +885,7 @@ const HSEManagementPanel = () => {
               />
             )}
             {activeTab === 'risk' && (
-              <RiskAssessmentContent 
-                assessments={riskAssessments}
-                openModal={openModal}
-                handleDelete={handleDelete}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-              />
+              <EnhancedRiskAssessmentContent />
             )}
             {activeTab === 'users' && (
               <UsersContent 
@@ -918,6 +915,9 @@ const HSEManagementPanel = () => {
             )}
             {activeTab === 'health-examinations' && (
               <HealthExaminationsContent />
+            )}
+            {activeTab === 'safety-training' && (
+              <SafetyTrainingContent />
             )}
             {activeTab === 'settings' && (
               <EditableSettingsContent 

@@ -373,6 +373,78 @@ export type Database = {
           },
         ]
       }
+      safety_trainings: {
+        Row: {
+          ai_analysis: Json | null
+          assessment_method: string | null
+          attendance_count: number | null
+          certificate_issued: boolean | null
+          created_at: string
+          department: string
+          duration_hours: number
+          effectiveness_score: number | null
+          follow_up_required: boolean | null
+          id: string
+          instructor_name: string
+          objectives: string[] | null
+          participants: string[] | null
+          pass_count: number | null
+          pass_score: number | null
+          status: string
+          training_content: string | null
+          training_date: string
+          training_title: string
+          training_type: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          assessment_method?: string | null
+          attendance_count?: number | null
+          certificate_issued?: boolean | null
+          created_at?: string
+          department: string
+          duration_hours?: number
+          effectiveness_score?: number | null
+          follow_up_required?: boolean | null
+          id?: string
+          instructor_name: string
+          objectives?: string[] | null
+          participants?: string[] | null
+          pass_count?: number | null
+          pass_score?: number | null
+          status?: string
+          training_content?: string | null
+          training_date: string
+          training_title: string
+          training_type: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          assessment_method?: string | null
+          attendance_count?: number | null
+          certificate_issued?: boolean | null
+          created_at?: string
+          department?: string
+          duration_hours?: number
+          effectiveness_score?: number | null
+          follow_up_required?: boolean | null
+          id?: string
+          instructor_name?: string
+          objectives?: string[] | null
+          participants?: string[] | null
+          pass_count?: number | null
+          pass_score?: number | null
+          status?: string
+          training_content?: string | null
+          training_date?: string
+          training_title?: string
+          training_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           active: boolean | null

@@ -79,7 +79,7 @@ export const SafetyTrainingContent = () => {
         .order('training_date', { ascending: false });
 
       if (error) throw error;
-      setTrainings(data || []);
+      setTrainings((data as SafetyTraining[]) || []);
     } catch (error) {
       console.error('Error fetching trainings:', error);
       toast({
