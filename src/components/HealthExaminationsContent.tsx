@@ -400,16 +400,16 @@ const HealthExaminationsContent = () => {
                   <Label>تاریخ معاینه</Label>
                   <div className="w-full">
                     <DatePicker
-                      value={formData.examination_date ? moment(formData.examination_date).format('jYYYY/jM/jD') : ''}
-                      onChange={(dateString: string) => {
-                        if (dateString) {
-                          const gregorianDate = moment(dateString, 'jYYYY/jM/jD').format('YYYY-MM-DD');
+                      value={formData.examination_date ? moment(formData.examination_date, 'YYYY-MM-DD').format('jYYYY/jMM/jDD') : ''}
+                      onChange={(dateObj: any) => {
+                        if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
+                          const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
                           setFormData({...formData, examination_date: gregorianDate});
                         }
                       }}
                       locale="fa"
                       shouldHighlightWeekends
-                      inputPlaceholder="انتخاب تاریخ"
+                      inputPlaceholder="انتخاب تاریخ معاینه"
                       inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
                     />
                   </div>
