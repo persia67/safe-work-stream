@@ -363,7 +363,11 @@ export const SafetyTrainingContent = () => {
                     <Label>تاریخ آموزش*</Label>
                     <div className="w-full">
                       <DatePicker
-                        value={formData.training_date ? moment(formData.training_date, 'YYYY-MM-DD').format('jYYYY/jMM/jDD') : ''}
+                        value={formData.training_date ? {
+                          year: parseInt(moment(formData.training_date, 'YYYY-MM-DD').format('jYYYY')),
+                          month: parseInt(moment(formData.training_date, 'YYYY-MM-DD').format('jMM')),
+                          day: parseInt(moment(formData.training_date, 'YYYY-MM-DD').format('jDD'))
+                        } : ''}
                         onChange={(dateObj: any) => {
                           if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
                             const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');

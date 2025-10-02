@@ -400,7 +400,11 @@ const HealthExaminationsContent = () => {
                   <Label>تاریخ معاینه</Label>
                   <div className="w-full">
                     <DatePicker
-                      value={formData.examination_date ? moment(formData.examination_date, 'YYYY-MM-DD').format('jYYYY/jMM/jDD') : ''}
+                      value={formData.examination_date ? {
+                        year: parseInt(moment(formData.examination_date, 'YYYY-MM-DD').format('jYYYY')),
+                        month: parseInt(moment(formData.examination_date, 'YYYY-MM-DD').format('jMM')),
+                        day: parseInt(moment(formData.examination_date, 'YYYY-MM-DD').format('jDD'))
+                      } : ''}
                       onChange={(dateObj: any) => {
                         if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
                           const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
