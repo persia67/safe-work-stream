@@ -15,6 +15,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, FileText, Users, Clock, AlertTriangle, CheckCircle, Edit, Trash2, Brain, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { FMEAForm } from './risk-assessment-forms/FMEAForm';
+import { HAZOPForm } from './risk-assessment-forms/HAZOPForm';
+import { JSAForm } from './risk-assessment-forms/JSAForm';
+import { LOPAForm } from './risk-assessment-forms/LOPAForm';
+import { BowTieForm } from './risk-assessment-forms/BowTieForm';
+import { WhatIfForm } from './risk-assessment-forms/WhatIfForm';
 
 interface RiskAssessment {
   id?: string;
@@ -331,157 +337,135 @@ export const EnhancedRiskAssessmentContent = () => {
                 </DialogTitle>
               </DialogHeader>
               <ScrollArea className="max-h-[70vh] pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-2">
-                  <div>
-                    <Label>شناسه ارزیابی*</Label>
-                    <Input
-                      value={formData.assessment_id}
-                      onChange={(e) => setFormData({...formData, assessment_id: e.target.value})}
-                      placeholder="RA-2025-001"
-                    />
-                  </div>
-                  <div>
-                    <Label>روش ارزیابی*</Label>
-                    <Select value={formData.assessment_type} onValueChange={(value) => setFormData({...formData, assessment_type: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب روش ارزیابی" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="FMEA">FMEA - تحلیل حالت‌های خرابی و اثرات</SelectItem>
-                        <SelectItem value="HAZOP">HAZOP - مطالعه خطر و قابلیت عملکرد</SelectItem>
-                        <SelectItem value="JSA">JSA - تجزیه ایمنی کار</SelectItem>
-                        <SelectItem value="LOPA">LOPA - تحلیل لایه‌های حفاظتی</SelectItem>
-                        <SelectItem value="Bow-Tie">Bow-Tie - تحلیل پاپیون</SelectItem>
-                        <SelectItem value="What-If">What-If - تحلیل چه‌اگر</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>منطقه/بخش*</Label>
-                    <Select value={formData.area} onValueChange={(value) => setFormData({...formData, area: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب منطقه" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
-                        <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
-                        <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
-                        <SelectItem value="جوشکاری">جوشکاری</SelectItem>
-                        <SelectItem value="شیت کن">شیت کن</SelectItem>
-                        <SelectItem value="تاسیسات">تاسیسات</SelectItem>
-                        <SelectItem value="تعمیرات">تعمیرات</SelectItem>
-                        <SelectItem value="اداری">اداری</SelectItem>
-                        <SelectItem value="HSE">HSE</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>نام فرآیند*</Label>
-                    <Input
-                      value={formData.process_name}
-                      onChange={(e) => setFormData({...formData, process_name: e.target.value})}
-                      placeholder="نام فرآیند یا فعالیت"
-                    />
-                  </div>
-                  <div>
-                    <Label>شرح خطر*</Label>
-                    <Input
-                      value={formData.hazard}
-                      onChange={(e) => setFormData({...formData, hazard: e.target.value})}
-                      placeholder="شرح کامل خطر شناسایی شده"
-                    />
-                  </div>
-                  <div>
-                    <Label>دسته‌بندی خطر</Label>
-                    <Select value={formData.hazard_category} onValueChange={(value) => setFormData({...formData, hazard_category: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب دسته‌بندی" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="فیزیکی">فیزیکی</SelectItem>
-                        <SelectItem value="شیمیایی">شیمیایی</SelectItem>
-                        <SelectItem value="بیولوژیکی">بیولوژیکی</SelectItem>
-                        <SelectItem value="ارگونومیک">ارگونومیک</SelectItem>
-                        <SelectItem value="روانی-اجتماعی">روانی-اجتماعی</SelectItem>
-                        <SelectItem value="محیطی">محیطی</SelectItem>
-                        <SelectItem value="مکانیکی">مکانیکی</SelectItem>
-                        <SelectItem value="الکتریکی">الکتریکی</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>احتمال وقوع</Label>
-                    <Select value={formData.probability} onValueChange={(value) => setFormData({...formData, probability: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب احتمال" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="کم">کم (نادر)</SelectItem>
-                        <SelectItem value="متوسط">متوسط (محتمل)</SelectItem>
-                        <SelectItem value="بالا">بالا (قطعی)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>شدت پیامد</Label>
-                    <Select value={formData.severity} onValueChange={(value) => setFormData({...formData, severity: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب شدت" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="کم">کم (جزئی)</SelectItem>
-                        <SelectItem value="متوسط">متوسط (قابل توجه)</SelectItem>
-                        <SelectItem value="بالا">بالا (جدی)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>تاریخ بازنگری</Label>
-                    <div className="w-full">
-                      <DatePicker
-                        value={formData.review_date ? {
-                          year: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jYYYY')),
-                          month: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jMM')),
-                          day: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jDD'))
-                        } : ''}
-                        onChange={(dateObj: any) => {
-                          if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
-                            const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
-                            setFormData({...formData, review_date: gregorianDate});
-                          }
-                        }}
-                        locale="fa"
-                        shouldHighlightWeekends
-                        inputPlaceholder="انتخاب تاریخ بازنگری"
-                        inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
-                      />
+                <div className="space-y-4">
+                  {/* بخش اطلاعات عمومی */}
+                  <div className="border-b pb-4">
+                    <h3 className="font-semibold mb-3">اطلاعات عمومی</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>شناسه ارزیابی*</Label>
+                        <Input
+                          value={formData.assessment_id}
+                          onChange={(e) => setFormData({...formData, assessment_id: e.target.value})}
+                          placeholder="RA-2025-001"
+                        />
+                      </div>
+                      <div>
+                        <Label>روش ارزیابی*</Label>
+                        <Select value={formData.assessment_type} onValueChange={(value) => setFormData({...formData, assessment_type: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="انتخاب روش ارزیابی" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FMEA">FMEA - تحلیل حالت‌های خرابی و اثرات</SelectItem>
+                            <SelectItem value="HAZOP">HAZOP - مطالعه خطر و قابلیت عملکرد</SelectItem>
+                            <SelectItem value="JSA">JSA - تجزیه ایمنی کار</SelectItem>
+                            <SelectItem value="LOPA">LOPA - تحلیل لایه‌های حفاظتی</SelectItem>
+                            <SelectItem value="Bow-Tie">Bow-Tie - تحلیل پاپیون</SelectItem>
+                            <SelectItem value="What-If">What-If - تحلیل چه‌اگر</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>منطقه/بخش*</Label>
+                        <Select value={formData.area} onValueChange={(value) => setFormData({...formData, area: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="انتخاب منطقه" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
+                            <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
+                            <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
+                            <SelectItem value="جوشکاری">جوشکاری</SelectItem>
+                            <SelectItem value="شیت کن">شیت کن</SelectItem>
+                            <SelectItem value="تاسیسات">تاسیسات</SelectItem>
+                            <SelectItem value="تعمیرات">تعمیرات</SelectItem>
+                            <SelectItem value="اداری">اداری</SelectItem>
+                            <SelectItem value="HSE">HSE</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>نام فرآیند*</Label>
+                        <Input
+                          value={formData.process_name}
+                          onChange={(e) => setFormData({...formData, process_name: e.target.value})}
+                          placeholder="نام فرآیند یا فعالیت"
+                        />
+                      </div>
+                      <div>
+                        <Label>تاریخ بازنگری</Label>
+                        <div className="w-full">
+                          <DatePicker
+                            value={formData.review_date ? {
+                              year: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jYYYY')),
+                              month: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jMM')),
+                              day: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jDD'))
+                            } : ''}
+                            onChange={(dateObj: any) => {
+                              if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
+                                const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
+                                setFormData({...formData, review_date: gregorianDate});
+                              }
+                            }}
+                            locale="fa"
+                            shouldHighlightWeekends
+                            inputPlaceholder="انتخاب تاریخ بازنگری"
+                            inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>وضعیت</Label>
+                        <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="انتخاب وضعیت" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="در حال بررسی">در حال بررسی</SelectItem>
+                            <SelectItem value="تایید شده">تایید شده</SelectItem>
+                            <SelectItem value="نیاز به بازنگری">نیاز به بازنگری</SelectItem>
+                            <SelectItem value="منقضی">منقضی</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <Label>وضعیت</Label>
-                    <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب وضعیت" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="در حال بررسی">در حال بررسی</SelectItem>
-                        <SelectItem value="تایید شده">تایید شده</SelectItem>
-                        <SelectItem value="نیاز به بازنگری">نیاز به بازنگری</SelectItem>
-                        <SelectItem value="منقضی">منقضی</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label>کنترل‌های اضافی</Label>
-                    <Textarea
-                      value={formData.additional_controls}
-                      onChange={(e) => setFormData({...formData, additional_controls: e.target.value})}
-                      placeholder="شرح کنترل‌های اضافی پیشنهادی..."
-                      rows={3}
-                    />
+
+                  {/* فرم تخصصی بر اساس روش انتخابی */}
+                  <div className="border-b pb-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      فرم اختصاصی {formData.assessment_type}
+                    </h3>
+                    
+                    {formData.assessment_type === 'FMEA' && (
+                      <FMEAForm formData={formData} setFormData={setFormData} />
+                    )}
+                    
+                    {formData.assessment_type === 'HAZOP' && (
+                      <HAZOPForm formData={formData} setFormData={setFormData} />
+                    )}
+                    
+                    {formData.assessment_type === 'JSA' && (
+                      <JSAForm formData={formData} setFormData={setFormData} />
+                    )}
+                    
+                    {formData.assessment_type === 'LOPA' && (
+                      <LOPAForm formData={formData} setFormData={setFormData} />
+                    )}
+                    
+                    {formData.assessment_type === 'Bow-Tie' && (
+                      <BowTieForm formData={formData} setFormData={setFormData} />
+                    )}
+                    
+                    {formData.assessment_type === 'What-If' && (
+                      <WhatIfForm formData={formData} setFormData={setFormData} />
+                    )}
                   </div>
                 </div>
-                <div className="flex justify-end space-x-2 mt-6">
+                
+                <div className="flex justify-end gap-2 mt-6">
                   <Button variant="outline" onClick={() => setDialogOpen(false)}>انصراف</Button>
                   <Button onClick={handleSave}>ذخیره</Button>
                 </div>
