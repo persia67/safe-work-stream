@@ -755,96 +755,110 @@ const HSEManagementPanel = () => {
   return (
     <div className="min-h-screen bg-background text-foreground" dir="rtl">
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-card border-l border-border h-screen fixed right-0 top-0 shadow-medium">
+        {/* Sidebar - مخفی در موبایل */}
+        <div className="hidden lg:block w-64 bg-card border-l border-border h-screen fixed right-0 top-0 shadow-medium z-30">
           {/* Header */}
-          <div className="p-6 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Shield className="w-6 h-6 text-primary-foreground" />
+          <div className="p-4 lg:p-6 border-b border-border">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="font-bold text-lg text-primary">HSE Management</h1>
-                <p className="text-xs text-muted-foreground">گروه صنعتی دانیال استیل</p>
+              <div className="min-w-0">
+                <h1 className="font-bold text-base lg:text-lg text-primary truncate">HSE Management</h1>
+                <p className="text-xs text-muted-foreground truncate">گروه صنعتی دانیال استیل</p>
               </div>
             </div>
           </div>
 
           {/* User Info */}
-          <div className="p-4 border-b border-border bg-secondary/30">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-primary-foreground" />
+          <div className="p-3 lg:p-4 border-b border-border bg-secondary/30">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="w-7 h-7 lg:w-8 lg:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-3 h-3 lg:w-4 lg:h-4 text-primary-foreground" />
               </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">{currentUser?.name}</p>
-                <p className="text-xs text-muted-foreground">{currentUser?.role}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-xs lg:text-sm truncate">{currentUser?.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{currentUser?.role}</p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="p-4 space-y-2">
+          <nav className="p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto" style={{maxHeight: 'calc(100vh - 250px)'}}>
             {getMenuItems().map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-right transition-colors ${
+                  className={`w-full flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 rounded-lg text-right transition-colors text-sm ${
                     activeTab === item.id
                       ? 'bg-primary text-primary-foreground shadow-soft'
                       : 'hover:bg-secondary'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <Icon className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                  <span className="text-xs lg:text-sm font-medium truncate">{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
           {/* Logout */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+          <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 border-t border-border bg-card">
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full justify-start gap-3"
+              className="w-full justify-start gap-2 lg:gap-3 text-xs lg:text-sm"
+              size="sm"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3 h-3 lg:w-4 lg:h-4" />
               خروج از سیستم
             </Button>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 mr-64">
+        <div className="flex-1 lg:mr-64 w-full">
           {/* Header Bar */}
-          <div className="bg-card border-b border-border p-4 shadow-soft">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h2 className="text-xl font-bold text-primary">
+          <div className="bg-card border-b border-border p-3 sm:p-4 shadow-soft sticky top-0 z-20">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                {/* منوی موبایل */}
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="lg:hidden h-8 w-8 flex-shrink-0"
+                  onClick={() => {
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    if (sidebar) sidebar.classList.remove('hidden');
+                  }}
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+                
+                <h2 className="text-base sm:text-xl font-bold text-primary truncate">
                   {getMenuItems().find(item => item.id === activeTab)?.label || 'داشبورد'}
                 </h2>
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs hidden sm:inline-flex">
                   نسخه 2.0
                 </Badge>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  {new Date().toLocaleDateString('fa-IR')}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden lg:inline">{new Date().toLocaleDateString('fa-IR')}</span>
                 </div>
-                <Button size="sm" variant="outline">
-                  <Bell className="w-4 h-4" />
-                  اعلانات
+                <Button size="sm" variant="outline" className="h-8 text-xs sm:text-sm">
+                  <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline mr-2">اعلانات</span>
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Content Area */}
-          <div className="p-6">
+          <div className="p-3 sm:p-4 lg:p-6">
             {/* Content will be rendered here based on activeTab */}
             {activeTab === 'dashboard' && <DashboardContent />}
             {activeTab === 'incidents' && (
@@ -926,6 +940,89 @@ const HSEManagementPanel = () => {
                 setUsers={setUsers}
               />
             )}
+          </div>
+        </div>
+
+        {/* منوی کشویی موبایل */}
+        <div 
+          id="mobile-sidebar" 
+          className="hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              e.currentTarget.classList.add('hidden');
+            }
+          }}
+        >
+          <div className="fixed right-0 top-0 bottom-0 w-64 bg-card shadow-lg flex flex-col">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="font-bold text-sm text-primary">HSE Management</h1>
+                  <p className="text-xs text-muted-foreground">دانیال استیل</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => document.getElementById('mobile-sidebar')?.classList.add('hidden')}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="p-3 border-b border-border bg-secondary/30">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center">
+                  <User className="w-3 h-3 text-primary-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-xs truncate">{currentUser?.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{currentUser?.role}</p>
+                </div>
+              </div>
+            </div>
+
+            <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+              {getMenuItems().map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      document.getElementById('mobile-sidebar')?.classList.add('hidden');
+                    }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-right transition-colors text-sm ${
+                      activeTab === item.id
+                        ? 'bg-primary text-primary-foreground shadow-soft'
+                        : 'hover:bg-secondary'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="p-3 border-t border-border bg-card">
+              <Button
+                onClick={() => {
+                  handleLogout();
+                  document.getElementById('mobile-sidebar')?.classList.add('hidden');
+                }}
+                variant="outline"
+                className="w-full justify-start gap-2 text-xs"
+                size="sm"
+              >
+                <LogOut className="w-3 h-3" />
+                خروج از سیستم
+              </Button>
+            </div>
           </div>
         </div>
       </div>
