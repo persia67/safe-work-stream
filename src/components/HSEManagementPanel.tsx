@@ -753,8 +753,8 @@ const HSEManagementPanel = () => {
 
   // رندر اصلی برنامه
   return (
-    <div className="min-h-screen bg-background text-foreground" dir="rtl">
-      <div className="flex">
+    <div className="min-h-screen bg-background text-foreground w-full" dir="rtl">
+      <div className="flex w-full min-h-screen">{/*... keep existing code*/}
         {/* Sidebar - مخفی در موبایل */}
         <div className="hidden lg:block w-64 bg-card border-l border-border h-screen fixed right-0 top-0 shadow-medium z-30">
           {/* Header */}
