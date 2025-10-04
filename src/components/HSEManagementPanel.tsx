@@ -44,6 +44,7 @@ import HealthExaminationsContent from './HealthExaminationsContent';
 import EditableSettingsContent from './EditableSettingsContent';
 import { SafetyTrainingContent } from './SafetyTrainingContent';
 import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
+import { HSEAIChat } from './HSEAIChat';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -1037,6 +1038,21 @@ const HSEManagementPanel = () => {
           closeModal={closeModal}
         />
       )}
+      
+      {/* AI Chat - Available on all pages */}
+      <HSEAIChat pageContext={
+        activeTab === 'dashboard' ? 'صفحه داشبورد - نمایش آمار و گزارش‌های کلی HSE' :
+        activeTab === 'work-permits' ? 'صفحه مجوزهای کار - مدیریت مجوزهای کار و ایمنی' :
+        activeTab === 'incidents' ? 'صفحه حوادث - ثبت و پیگیری حوادث' :
+        activeTab === 'daily-reports' ? 'صفحه گزارش‌های روزانه - ثبت گزارش‌های روزانه HSE' :
+        activeTab === 'risk-assessment' ? 'صفحه ارزیابی ریسک - انجام ارزیابی‌های ریسک' :
+        activeTab === 'personnel' ? 'صفحه پرسنل - مدیریت اطلاعات پرسنل' :
+        activeTab === 'training' ? 'صفحه آموزش - مدیریت دوره‌های آموزشی ایمنی' :
+        activeTab === 'health' ? 'صفحه معاینات سلامت - مدیریت معاینات پزشکی کارکنان' :
+        activeTab === 'ergonomic' ? 'صفحه ارزیابی ارگونومی - ارزیابی وضعیت ارگونومیکی' :
+        activeTab === 'settings' ? 'صفحه تنظیمات - تنظیمات سیستم' :
+        'صفحه اصلی سیستم مدیریت HSE'
+      } />
     </div>
   );
 };

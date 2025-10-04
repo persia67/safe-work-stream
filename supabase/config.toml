@@ -1,1 +1,4 @@
 project_id = "thaghdaioherrbiyjpnf"
+
+[functions.hse-ai-chat]
+verify_jwt = false
