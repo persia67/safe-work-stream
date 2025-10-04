@@ -21,8 +21,6 @@ import { JSAForm } from './risk-assessment-forms/JSAForm';
 import { LOPAForm } from './risk-assessment-forms/LOPAForm';
 import { BowTieForm } from './risk-assessment-forms/BowTieForm';
 import { WhatIfForm } from './risk-assessment-forms/WhatIfForm';
-import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
-
 interface RiskAssessment {
   id?: string;
   assessment_id: string;
@@ -44,15 +42,15 @@ interface RiskAssessment {
   updated_at?: string;
   ai_analysis?: any;
 }
-
 export const EnhancedRiskAssessmentContent = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [assessments, setAssessments] = useState<RiskAssessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<RiskAssessment | null>(null);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
-
   const [formData, setFormData] = useState<RiskAssessment>({
     assessment_id: '',
     assessment_type: 'FMEA',
@@ -69,20 +67,19 @@ export const EnhancedRiskAssessmentContent = () => {
     review_date: '',
     status: 'در حال بررسی'
   });
-
   useEffect(() => {
     fetchAssessments();
   }, []);
-
   const fetchAssessments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('risk_assessments')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('risk_assessments').select('*').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
-      setAssessments((data as RiskAssessment[]) || []);
+      setAssessments(data as RiskAssessment[] || []);
     } catch (error) {
       console.error('Error fetching assessments:', error);
       toast({
@@ -94,19 +91,24 @@ export const EnhancedRiskAssessmentContent = () => {
       setLoading(false);
     }
   };
-
   const calculateRiskScore = (probability: string, severity: string) => {
-    const probMap = { 'کم': 1, 'متوسط': 2, 'بالا': 3 };
-    const sevMap = { 'کم': 1, 'متوسط': 2, 'بالا': 3 };
+    const probMap = {
+      'کم': 1,
+      'متوسط': 2,
+      'بالا': 3
+    };
+    const sevMap = {
+      'کم': 1,
+      'متوسط': 2,
+      'بالا': 3
+    };
     return probMap[probability] * sevMap[severity];
   };
-
   const getRiskLevel = (score: number) => {
     if (score <= 2) return 'کم';
     if (score <= 4) return 'متوسط';
     return 'بالا';
   };
-
   const generateAIAnalysis = async (assessment: RiskAssessment) => {
     setAiAnalysisLoading(true);
     try {
@@ -134,25 +136,15 @@ export const EnhancedRiskAssessmentContent = () => {
         risk_classification: assessment.risk_score > 6 ? 'بحرانی' : assessment.risk_score > 4 ? 'قابل توجه' : 'قابل قبول',
         control_adequacy: assessment.existing_controls.length > 2 ? 'مناسب' : 'نیاز به بهبود',
         priority_level: assessment.risk_score > 6 ? 'فوری' : assessment.risk_score > 4 ? 'بالا' : 'متوسط',
-        recommendations: [
-          assessment.risk_score > 6 ? 'اقدام فوری برای کاهش ریسک' : 'نظارت مستمر بر کنترل‌ها',
-          'بازنگری دوره‌ای کنترل‌های موجود',
-          'آموزش کارکنان در خصوص خطرات شناسایی شده'
-        ],
+        recommendations: [assessment.risk_score > 6 ? 'اقدام فوری برای کاهش ریسک' : 'نظارت مستمر بر کنترل‌ها', 'بازنگری دوره‌ای کنترل‌های موجود', 'آموزش کارکنان در خصوص خطرات شناسایی شده'],
         cost_benefit: {
           estimated_cost: assessment.risk_score * 1000000 + ' تومان',
           potential_savings: assessment.risk_score * 2000000 + ' تومان',
           payback_period: assessment.risk_score > 6 ? '3 ماه' : '6 ماه'
         },
         methodology_specific: getMethodologySpecificAnalysis(assessment.assessment_type, assessment),
-        action_plan: [
-          'تعیین مسئول اجرای کنترل‌ها',
-          'تدوین برنامه زمان‌بندی اجرا',
-          'تخصیص منابع مورد نیاز',
-          'نظارت و پایش مستمر'
-        ]
+        action_plan: ['تعیین مسئول اجرای کنترل‌ها', 'تدوین برنامه زمان‌بندی اجرا', 'تخصیص منابع مورد نیاز', 'نظارت و پایش مستمر']
       };
-
       return mockAnalysis;
     } catch (error) {
       console.error('Error generating AI analysis:', error);
@@ -161,7 +153,6 @@ export const EnhancedRiskAssessmentContent = () => {
       setAiAnalysisLoading(false);
     }
   };
-
   const getMethodologySpecificAnalysis = (type: string, assessment: RiskAssessment) => {
     switch (type) {
       case 'FMEA':
@@ -192,15 +183,13 @@ export const EnhancedRiskAssessmentContent = () => {
         };
     }
   };
-
   const handleSave = async () => {
     try {
-      if (!formData.assessment_id || !formData.area || 
-          !formData.process_name || !formData.hazard) {
-        toast({ 
-          title: "خطا", 
+      if (!formData.assessment_id || !formData.area || !formData.process_name || !formData.hazard) {
+        toast({
+          title: "خطا",
           description: "لطفا تمام فیلدهای الزامی را پر کنید",
-          variant: "destructive" 
+          variant: "destructive"
         });
         return;
       }
@@ -208,7 +197,6 @@ export const EnhancedRiskAssessmentContent = () => {
       // محاسبه امتیاز و سطح ریسک
       const calculatedScore = calculateRiskScore(formData.probability, formData.severity);
       const calculatedLevel = getRiskLevel(calculatedScore);
-
       const dataToSave = {
         ...formData,
         risk_score: calculatedScore,
@@ -216,24 +204,25 @@ export const EnhancedRiskAssessmentContent = () => {
         existing_controls: formData.existing_controls.length > 0 ? formData.existing_controls : [],
         review_date: formData.review_date || null
       };
-
       if (editingAssessment) {
-        const { error } = await supabase
-          .from('risk_assessments')
-          .update(dataToSave)
-          .eq('id', editingAssessment.id);
-
+        const {
+          error
+        } = await supabase.from('risk_assessments').update(dataToSave).eq('id', editingAssessment.id);
         if (error) throw error;
-        toast({ title: "موفق", description: "اطلاعات ارزیابی ریسک با موفقیت به‌روزرسانی شد" });
+        toast({
+          title: "موفق",
+          description: "اطلاعات ارزیابی ریسک با موفقیت به‌روزرسانی شد"
+        });
       } else {
-        const { error } = await supabase
-          .from('risk_assessments')
-          .insert([dataToSave]);
-
+        const {
+          error
+        } = await supabase.from('risk_assessments').insert([dataToSave]);
         if (error) throw error;
-        toast({ title: "موفق", description: "ارزیابی ریسک جدید با موفقیت ثبت شد" });
+        toast({
+          title: "موفق",
+          description: "ارزیابی ریسک جدید با موفقیت ثبت شد"
+        });
       }
-
       await fetchAssessments();
       setDialogOpen(false);
       resetForm();
@@ -246,18 +235,17 @@ export const EnhancedRiskAssessmentContent = () => {
       });
     }
   };
-
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('risk_assessments')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('risk_assessments').delete().eq('id', id);
       if (error) throw error;
-      
       await fetchAssessments();
-      toast({ title: "موفق", description: "ارزیابی ریسک با موفقیت حذف شد" });
+      toast({
+        title: "موفق",
+        description: "ارزیابی ریسک با موفقیت حذف شد"
+      });
     } catch (error) {
       console.error('Error deleting assessment:', error);
       toast({
@@ -267,7 +255,6 @@ export const EnhancedRiskAssessmentContent = () => {
       });
     }
   };
-
   const resetForm = () => {
     setFormData({
       assessment_id: '',
@@ -287,7 +274,6 @@ export const EnhancedRiskAssessmentContent = () => {
     });
     setEditingAssessment(null);
   };
-
   const openDialog = (assessment?: RiskAssessment) => {
     if (assessment) {
       setFormData(assessment);
@@ -297,7 +283,6 @@ export const EnhancedRiskAssessmentContent = () => {
     }
     setDialogOpen(true);
   };
-
   const addControl = (control: string) => {
     if (control && !formData.existing_controls.includes(control)) {
       setFormData({
@@ -306,18 +291,17 @@ export const EnhancedRiskAssessmentContent = () => {
       });
     }
   };
-
   const removeControl = (index: number) => {
     const newControls = formData.existing_controls.filter((_, i) => i !== index);
-    setFormData({ ...formData, existing_controls: newControls });
+    setFormData({
+      ...formData,
+      existing_controls: newControls
+    });
   };
-
   if (loading) {
     return <div className="flex justify-center items-center h-64">در حال بارگذاری...</div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -345,15 +329,17 @@ export const EnhancedRiskAssessmentContent = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>شناسه ارزیابی*</Label>
-                        <Input
-                          value={formData.assessment_id}
-                          onChange={(e) => setFormData({...formData, assessment_id: e.target.value})}
-                          placeholder="RA-2025-001"
-                        />
+                        <Input value={formData.assessment_id} onChange={e => setFormData({
+                        ...formData,
+                        assessment_id: e.target.value
+                      })} placeholder="RA-2025-001" />
                       </div>
                       <div>
                         <Label>روش ارزیابی*</Label>
-                        <Select value={formData.assessment_type} onValueChange={(value) => setFormData({...formData, assessment_type: value})}>
+                        <Select value={formData.assessment_type} onValueChange={value => setFormData({
+                        ...formData,
+                        assessment_type: value
+                      })}>
                           <SelectTrigger>
                             <SelectValue placeholder="انتخاب روش ارزیابی" />
                           </SelectTrigger>
@@ -369,7 +355,10 @@ export const EnhancedRiskAssessmentContent = () => {
                       </div>
                       <div>
                         <Label>منطقه/بخش*</Label>
-                        <Select value={formData.area} onValueChange={(value) => setFormData({...formData, area: value})}>
+                        <Select value={formData.area} onValueChange={value => setFormData({
+                        ...formData,
+                        area: value
+                      })}>
                           <SelectTrigger>
                             <SelectValue placeholder="انتخاب منطقه" />
                           </SelectTrigger>
@@ -388,33 +377,35 @@ export const EnhancedRiskAssessmentContent = () => {
                       </div>
                       <div>
                         <Label>نام فرآیند*</Label>
-                        <Input
-                          value={formData.process_name}
-                          onChange={(e) => setFormData({...formData, process_name: e.target.value})}
-                          placeholder="نام فرآیند یا فعالیت"
-                        />
+                        <Input value={formData.process_name} onChange={e => setFormData({
+                        ...formData,
+                        process_name: e.target.value
+                      })} placeholder="نام فرآیند یا فعالیت" />
                       </div>
                       <div>
-                        <Label>تاریخ بازنگری</Label>
+                        <Label className="bg-teal-50">تاریخ بازنگری</Label>
                         <div className="w-full">
-                            <DatePicker
-                              value={formData.review_date ? gregorianToPersian(formData.review_date) : ''}
-                              onChange={(dateObj: any) => {
-                                const gregorianDate = persianToGregorian(dateObj);
-                                if (gregorianDate) {
-                                  setFormData({...formData, review_date: gregorianDate});
-                                }
-                            }}
-                            locale="fa"
-                            shouldHighlightWeekends
-                            inputPlaceholder="انتخاب تاریخ بازنگری"
-                            inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
-                          />
+                          <DatePicker value={formData.review_date ? {
+                          year: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jYYYY')),
+                          month: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jMM')),
+                          day: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jDD'))
+                        } : ''} onChange={(dateObj: any) => {
+                          if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
+                            const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
+                            setFormData({
+                              ...formData,
+                              review_date: gregorianDate
+                            });
+                          }
+                        }} locale="fa" shouldHighlightWeekends inputPlaceholder="انتخاب تاریخ بازنگری" inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md" />
                         </div>
                       </div>
                       <div>
                         <Label>وضعیت</Label>
-                        <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                        <Select value={formData.status} onValueChange={value => setFormData({
+                        ...formData,
+                        status: value
+                      })}>
                           <SelectTrigger>
                             <SelectValue placeholder="انتخاب وضعیت" />
                           </SelectTrigger>
@@ -436,29 +427,17 @@ export const EnhancedRiskAssessmentContent = () => {
                       فرم اختصاصی {formData.assessment_type}
                     </h3>
                     
-                    {formData.assessment_type === 'FMEA' && (
-                      <FMEAForm formData={formData} setFormData={setFormData} />
-                    )}
+                    {formData.assessment_type === 'FMEA' && <FMEAForm formData={formData} setFormData={setFormData} />}
                     
-                    {formData.assessment_type === 'HAZOP' && (
-                      <HAZOPForm formData={formData} setFormData={setFormData} />
-                    )}
+                    {formData.assessment_type === 'HAZOP' && <HAZOPForm formData={formData} setFormData={setFormData} />}
                     
-                    {formData.assessment_type === 'JSA' && (
-                      <JSAForm formData={formData} setFormData={setFormData} />
-                    )}
+                    {formData.assessment_type === 'JSA' && <JSAForm formData={formData} setFormData={setFormData} />}
                     
-                    {formData.assessment_type === 'LOPA' && (
-                      <LOPAForm formData={formData} setFormData={setFormData} />
-                    )}
+                    {formData.assessment_type === 'LOPA' && <LOPAForm formData={formData} setFormData={setFormData} />}
                     
-                    {formData.assessment_type === 'Bow-Tie' && (
-                      <BowTieForm formData={formData} setFormData={setFormData} />
-                    )}
+                    {formData.assessment_type === 'Bow-Tie' && <BowTieForm formData={formData} setFormData={setFormData} />}
                     
-                    {formData.assessment_type === 'What-If' && (
-                      <WhatIfForm formData={formData} setFormData={setFormData} />
-                    )}
+                    {formData.assessment_type === 'What-If' && <WhatIfForm formData={formData} setFormData={setFormData} />}
                   </div>
                 </div>
                 
@@ -472,8 +451,7 @@ export const EnhancedRiskAssessmentContent = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {assessments.map((assessment) => (
-              <Card key={assessment.id} className="border-l-4 border-l-primary">
+            {assessments.map(assessment => <Card key={assessment.id} className="border-l-4 border-l-primary">
                 <CardContent className="pt-4">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -504,30 +482,24 @@ export const EnhancedRiskAssessmentContent = () => {
                     <p className="text-sm mt-1"><strong>دسته‌بندی:</strong> {assessment.hazard_category}</p>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      const analysis = await generateAIAnalysis(assessment);
-                      if (analysis) {
-                        setAssessments(prev => prev.map(a => 
-                          a.id === assessment.id ? { ...a, ai_analysis: analysis } : a
-                        ));
-                        toast({
-                          title: "موفق",
-                          description: "تحلیل هوش مصنوعی تولید شد"
-                        });
-                      }
-                    }}
-                    disabled={aiAnalysisLoading}
-                    className="mb-4"
-                  >
+                  <Button variant="outline" size="sm" onClick={async () => {
+                const analysis = await generateAIAnalysis(assessment);
+                if (analysis) {
+                  setAssessments(prev => prev.map(a => a.id === assessment.id ? {
+                    ...a,
+                    ai_analysis: analysis
+                  } : a));
+                  toast({
+                    title: "موفق",
+                    description: "تحلیل هوش مصنوعی تولید شد"
+                  });
+                }
+              }} disabled={aiAnalysisLoading} className="mb-4">
                     <Brain className="h-4 w-4 mr-2" />
                     {aiAnalysisLoading ? 'در حال تحلیل...' : 'تحلیل هوش مصنوعی'}
                   </Button>
 
-                  {assessment.ai_analysis && (
-                    <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg border">
+                  {assessment.ai_analysis && <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg border">
                       <h4 className="font-semibold flex items-center gap-2">
                         <Brain className="h-5 w-5 text-blue-600" />
                         تحلیل هوش مصنوعی {assessment.assessment_type}
@@ -557,12 +529,10 @@ export const EnhancedRiskAssessmentContent = () => {
                         </TabsList>
                         
                         <TabsContent value="recommendations" className="space-y-2">
-                          {assessment.ai_analysis.recommendations?.map((rec: string, index: number) => (
-                            <div key={index} className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-950/20 rounded">
+                          {assessment.ai_analysis.recommendations?.map((rec: string, index: number) => <div key={index} className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-950/20 rounded">
                               <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                               <span className="text-sm">{rec}</span>
-                            </div>
-                          ))}
+                            </div>)}
                         </TabsContent>
                         
                         <TabsContent value="cost-benefit" className="space-y-2">
@@ -583,37 +553,28 @@ export const EnhancedRiskAssessmentContent = () => {
                         </TabsContent>
                         
                         <TabsContent value="methodology" className="space-y-2">
-                          {assessment.assessment_type === 'FMEA' && assessment.ai_analysis.methodology_specific && (
-                            <div className="text-sm space-y-2">
+                          {assessment.assessment_type === 'FMEA' && assessment.ai_analysis.methodology_specific && <div className="text-sm space-y-2">
                               <div><strong>RPN:</strong> {assessment.ai_analysis.methodology_specific.rpn}</div>
                               <div><strong>رتبه تشخیص:</strong> {assessment.ai_analysis.methodology_specific.detection_rating}</div>
-                            </div>
-                          )}
-                          {assessment.assessment_type === 'HAZOP' && assessment.ai_analysis.methodology_specific && (
-                            <div className="text-sm space-y-2">
+                            </div>}
+                          {assessment.assessment_type === 'HAZOP' && assessment.ai_analysis.methodology_specific && <div className="text-sm space-y-2">
                               <div><strong>کلمات راهنما:</strong> {assessment.ai_analysis.methodology_specific.guide_words?.join(', ')}</div>
                               <div><strong>تحلیل انحراف:</strong> {assessment.ai_analysis.methodology_specific.deviation_analysis}</div>
-                            </div>
-                          )}
+                            </div>}
                         </TabsContent>
                         
                         <TabsContent value="action-plan" className="space-y-2">
-                          {assessment.ai_analysis.action_plan?.map((action: string, index: number) => (
-                            <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
+                          {assessment.ai_analysis.action_plan?.map((action: string, index: number) => <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
                               <Clock className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                               <span className="text-sm">{action}</span>
-                            </div>
-                          ))}
+                            </div>)}
                         </TabsContent>
                       </Tabs>
-                    </div>
-                  )}
+                    </div>}
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
