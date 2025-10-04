@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { User, Phone, Mail, Building, Save, Settings, Shield, Bell, Clock } from 'lucide-react';
+import { formatPersianDate } from '@/lib/dateUtils';
 
 interface EditableSettingsContentProps {
   currentUser: any;
@@ -406,7 +407,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
                 <span className="text-sm font-medium">آخرین ورود:</span>
                 <span className="text-sm text-muted-foreground">
                   {currentUser?.last_sign_in_at 
-                    ? new Date(currentUser.last_sign_in_at).toLocaleDateString('fa-IR')
+                    ? formatPersianDate(currentUser.last_sign_in_at)
                     : 'نامشخص'
                   }
                 </span>
@@ -416,7 +417,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
                 <span className="text-sm font-medium">تاریخ عضویت:</span>
                 <span className="text-sm text-muted-foreground">
                   {currentUser?.created_at 
-                    ? new Date(currentUser.created_at).toLocaleDateString('fa-IR')
+                    ? formatPersianDate(currentUser.created_at)
                     : 'نامشخص'
                   }
                 </span>

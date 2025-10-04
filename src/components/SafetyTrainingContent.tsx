@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, FileText, Users, Clock, AlertTriangle, CheckCircle, Edit, Trash2, Brain } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
 
 interface SafetyTraining {
   id?: string;
@@ -363,14 +364,10 @@ export const SafetyTrainingContent = () => {
                     <Label>تاریخ آموزش*</Label>
                     <div className="w-full">
                       <DatePicker
-                        value={formData.training_date ? {
-                          year: parseInt(moment(formData.training_date, 'YYYY-MM-DD').format('jYYYY')),
-                          month: parseInt(moment(formData.training_date, 'YYYY-MM-DD').format('jMM')),
-                          day: parseInt(moment(formData.training_date, 'YYYY-MM-DD').format('jDD'))
-                        } : ''}
+                        value={formData.training_date ? gregorianToPersian(formData.training_date) : ''}
                         onChange={(dateObj: any) => {
-                          if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
-                            const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
+                          const gregorianDate = persianToGregorian(dateObj);
+                          if (gregorianDate) {
                             setFormData({...formData, training_date: gregorianDate});
                           }
                         }}
@@ -465,7 +462,7 @@ export const SafetyTrainingContent = () => {
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {moment(training.training_date).format('jYYYY/jMM/jDD')}
+                          {formatPersianDate(training.training_date)}
                         </span>
                         <span>{training.duration_hours} ساعت</span>
                         <span>مدرس: {training.instructor_name}</span>

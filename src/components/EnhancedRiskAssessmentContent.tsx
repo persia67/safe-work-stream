@@ -21,6 +21,7 @@ import { JSAForm } from './risk-assessment-forms/JSAForm';
 import { LOPAForm } from './risk-assessment-forms/LOPAForm';
 import { BowTieForm } from './risk-assessment-forms/BowTieForm';
 import { WhatIfForm } from './risk-assessment-forms/WhatIfForm';
+import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
 
 interface RiskAssessment {
   id?: string;
@@ -396,17 +397,13 @@ export const EnhancedRiskAssessmentContent = () => {
                       <div>
                         <Label>تاریخ بازنگری</Label>
                         <div className="w-full">
-                          <DatePicker
-                            value={formData.review_date ? {
-                              year: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jYYYY')),
-                              month: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jMM')),
-                              day: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jDD'))
-                            } : ''}
-                            onChange={(dateObj: any) => {
-                              if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
-                                const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
-                                setFormData({...formData, review_date: gregorianDate});
-                              }
+                            <DatePicker
+                              value={formData.review_date ? gregorianToPersian(formData.review_date) : ''}
+                              onChange={(dateObj: any) => {
+                                const gregorianDate = persianToGregorian(dateObj);
+                                if (gregorianDate) {
+                                  setFormData({...formData, review_date: gregorianDate});
+                                }
                             }}
                             locale="fa"
                             shouldHighlightWeekends

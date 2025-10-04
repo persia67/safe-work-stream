@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Plus, Search, Eye, Edit, Trash2, TrendingUp, AlertTriangle, Activity, Brain, Calendar, User, Stethoscope, BarChart3, Target, CheckCircle } from 'lucide-react';
+import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
 
 interface HealthExamination {
   id: string;
@@ -399,17 +400,13 @@ const HealthExaminationsContent = () => {
                 <div>
                   <Label>تاریخ معاینه</Label>
                   <div className="w-full">
-                    <DatePicker
-                      value={formData.examination_date ? {
-                        year: parseInt(moment(formData.examination_date, 'YYYY-MM-DD').format('jYYYY')),
-                        month: parseInt(moment(formData.examination_date, 'YYYY-MM-DD').format('jMM')),
-                        day: parseInt(moment(formData.examination_date, 'YYYY-MM-DD').format('jDD'))
-                      } : ''}
-                      onChange={(dateObj: any) => {
-                        if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
-                          const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
-                          setFormData({...formData, examination_date: gregorianDate});
-                        }
+                      <DatePicker
+                        value={formData.examination_date ? gregorianToPersian(formData.examination_date) : ''}
+                        onChange={(dateObj: any) => {
+                          const gregorianDate = persianToGregorian(dateObj);
+                          if (gregorianDate) {
+                            setFormData({...formData, examination_date: gregorianDate});
+                          }
                       }}
                       locale="fa"
                       shouldHighlightWeekends
@@ -766,7 +763,7 @@ const HealthExaminationsContent = () => {
                       <Badge variant="outline">{exam.department}</Badge>
                     </td>
                     <td className="p-4 text-sm">
-                      {new Date(exam.examination_date).toLocaleDateString('fa-IR')}
+                      {formatPersianDate(exam.examination_date)}
                     </td>
                     <td className="p-4">
                       <Badge 

@@ -58,6 +58,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getTodayPersian } from '@/lib/dateUtils';
 
 const HSEManagementPanel = () => {
   const { toast } = useToast();
@@ -306,7 +307,7 @@ const HSEManagementPanel = () => {
       if (user) {
         // بروزرسانی زمان آخرین ورود
         setUsers(prev => prev.map(u => 
-          u.id === user.id ? {...u, lastLogin: new Date().toLocaleString('fa-IR')} : u
+          u.id === user.id ? {...u, lastLogin: getTodayPersian('jYYYY/jMM/jDD HH:mm')} : u
         ));
         setCurrentUser(user);
         setIsLoggedIn(true);
@@ -848,7 +849,7 @@ const HSEManagementPanel = () => {
               <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                 <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                   <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden lg:inline">{new Date().toLocaleDateString('fa-IR')}</span>
+                  <span className="hidden lg:inline">{getTodayPersian()}</span>
                 </div>
                 <Button size="sm" variant="outline" className="h-8 text-xs sm:text-sm">
                   <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
