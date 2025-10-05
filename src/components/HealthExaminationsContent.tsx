@@ -410,7 +410,6 @@ const HealthExaminationsContent = () => {
                       }}
                       locale="fa"
                       shouldHighlightWeekends
-                      renderInput={false}
                     />
                   </div>
                 </div>

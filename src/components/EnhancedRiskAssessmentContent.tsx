@@ -399,7 +399,6 @@ export const EnhancedRiskAssessmentContent = () => {
                             }} 
                             locale="fa" 
                             shouldHighlightWeekends 
-                            renderInput={false}
                           />
                         </div>
                       </div>

@@ -373,7 +373,6 @@ export const SafetyTrainingContent = () => {
                         }}
                         locale="fa"
                         shouldHighlightWeekends
-                        renderInput={false}
                       />
                     </div>
                   </div>
