@@ -336,6 +336,25 @@ export const EnhancedRiskAssessmentContent = () => {
                       })} placeholder="RA-2025-001" />
                       </div>
                       <div>
+                        <Label>تاریخ بازنگری</Label>
+                        <div className="w-full border border-input rounded-md p-2 bg-background">
+                          <DatePicker 
+                            value={formData.review_date ? gregorianToPersian(formData.review_date) : ''}
+                            onChange={(dateObj: any) => {
+                              const gregorianDate = persianToGregorian(dateObj);
+                              if (gregorianDate) {
+                                setFormData({
+                                  ...formData,
+                                  review_date: gregorianDate
+                                });
+                              }
+                            }} 
+                            locale="fa" 
+                            shouldHighlightWeekends 
+                          />
+                        </div>
+                      </div>
+                      <div>
                         <Label>روش ارزیابی*</Label>
                         <Select value={formData.assessment_type} onValueChange={value => setFormData({
                         ...formData,
@@ -384,23 +403,21 @@ export const EnhancedRiskAssessmentContent = () => {
                       })} placeholder="نام فرآیند یا فعالیت" />
                       </div>
                       <div>
-                        <Label>تاریخ بازنگری</Label>
-                        <div className="w-full border border-input rounded-md p-2 bg-background">
-                          <DatePicker 
-                            value={formData.review_date ? gregorianToPersian(formData.review_date) : ''}
-                            onChange={(dateObj: any) => {
-                              const gregorianDate = persianToGregorian(dateObj);
-                              if (gregorianDate) {
-                                setFormData({
-                                  ...formData,
-                                  review_date: gregorianDate
-                                });
-                              }
-                            }} 
-                            locale="fa" 
-                            shouldHighlightWeekends 
-                          />
-                        </div>
+                        <Label>وضعیت</Label>
+                        <Select value={formData.status} onValueChange={value => setFormData({
+                        ...formData,
+                        status: value
+                      })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="انتخاب وضعیت" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="در حال بررسی">در حال بررسی</SelectItem>
+                            <SelectItem value="تایید شده">تایید شده</SelectItem>
+                            <SelectItem value="نیاز به بازنگری">نیاز به بازنگری</SelectItem>
+                            <SelectItem value="منقضی">منقضی</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label>وضعیت</Label>
