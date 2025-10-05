@@ -54,7 +54,7 @@ export const SafetyTrainingContent = () => {
     training_type: '',
     department: '',
     instructor_name: '',
-    training_date: '',
+    training_date: new Date().toISOString().split('T')[0],
     duration_hours: 2,
     participants: [],
     training_content: '',
@@ -152,8 +152,7 @@ export const SafetyTrainingContent = () => {
   const handleSave = async () => {
     try {
       if (!formData.training_title || !formData.training_type || 
-          !formData.department || !formData.instructor_name ||
-          !formData.training_date) {
+          !formData.department || !formData.instructor_name) {
         toast({ 
           title: "خطا", 
           description: "لطفا تمام فیلدهای الزامی را پر کنید",
@@ -164,6 +163,7 @@ export const SafetyTrainingContent = () => {
 
       const dataToSave = {
         ...formData,
+        training_date: new Date().toISOString().split('T')[0],
         participants: formData.participants.length > 0 ? formData.participants : [],
         objectives: formData.objectives.length > 0 ? formData.objectives : []
       };
@@ -225,7 +225,7 @@ export const SafetyTrainingContent = () => {
       training_type: '',
       department: '',
       instructor_name: '',
-      training_date: '',
+      training_date: new Date().toISOString().split('T')[0],
       duration_hours: 2,
       participants: [],
       training_content: '',
@@ -359,22 +359,6 @@ export const SafetyTrainingContent = () => {
                       onChange={(e) => setFormData({...formData, instructor_name: e.target.value})}
                       placeholder="نام مدرس را وارد کنید"
                     />
-                  </div>
-                  <div>
-                    <Label>تاریخ آموزش*</Label>
-                    <div className="w-full border border-input rounded-md p-2 bg-background">
-                      <DatePicker
-                        value={formData.training_date ? gregorianToPersian(formData.training_date) : ''}
-                        onChange={(dateObj: any) => {
-                          const gregorianDate = persianToGregorian(dateObj);
-                          if (gregorianDate) {
-                            setFormData({...formData, training_date: gregorianDate});
-                          }
-                        }}
-                        locale="fa"
-                        shouldHighlightWeekends
-                      />
-                    </div>
                   </div>
                   <div>
                     <Label>مدت آموزش (ساعت)</Label>

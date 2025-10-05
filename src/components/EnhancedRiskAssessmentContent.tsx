@@ -65,7 +65,7 @@ export const EnhancedRiskAssessmentContent = () => {
     risk_score: 1,
     existing_controls: [],
     additional_controls: '',
-    review_date: '',
+    review_date: new Date().toISOString().split('T')[0],
     status: 'در حال بررسی'
   });
   useEffect(() => {
@@ -200,10 +200,10 @@ export const EnhancedRiskAssessmentContent = () => {
       const calculatedLevel = getRiskLevel(calculatedScore);
       const dataToSave = {
         ...formData,
+        review_date: new Date().toISOString().split('T')[0],
         risk_score: calculatedScore,
         risk_level: calculatedLevel,
-        existing_controls: formData.existing_controls.length > 0 ? formData.existing_controls : [],
-        review_date: formData.review_date || null
+        existing_controls: formData.existing_controls.length > 0 ? formData.existing_controls : []
       };
       if (editingAssessment) {
         const {
@@ -270,7 +270,7 @@ export const EnhancedRiskAssessmentContent = () => {
       risk_score: 1,
       existing_controls: [],
       additional_controls: '',
-      review_date: '',
+      review_date: new Date().toISOString().split('T')[0],
       status: 'در حال بررسی'
     });
     setEditingAssessment(null);
@@ -334,25 +334,6 @@ export const EnhancedRiskAssessmentContent = () => {
                         ...formData,
                         assessment_id: e.target.value
                       })} placeholder="RA-2025-001" />
-                      </div>
-                      <div>
-                        <Label>تاریخ بازنگری</Label>
-                        <div className="w-full border border-input rounded-md p-2 bg-background">
-                          <DatePicker 
-                            value={formData.review_date ? gregorianToPersian(formData.review_date) : ''}
-                            onChange={(dateObj: any) => {
-                              const gregorianDate = persianToGregorian(dateObj);
-                              if (gregorianDate) {
-                                setFormData({
-                                  ...formData,
-                                  review_date: gregorianDate
-                                });
-                              }
-                            }} 
-                            locale="fa" 
-                            shouldHighlightWeekends 
-                          />
-                        </div>
                       </div>
                       <div>
                         <Label>روش ارزیابی*</Label>

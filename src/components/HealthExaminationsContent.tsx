@@ -99,7 +99,7 @@ const HealthExaminationsContent = () => {
       // Validate required fields
       if (!formData.employee_name || !formData.employee_id || 
           !formData.department || !formData.position ||
-          !formData.examination_date || !formData.examiner_name) {
+          !formData.examiner_name) {
         toast({ 
           title: "خطا", 
           description: "لطفا تمام فیلدهای الزامی را پر کنید",
@@ -110,6 +110,7 @@ const HealthExaminationsContent = () => {
 
       const dataToSave = {
         ...formData,
+        examination_date: new Date().toISOString().split('T')[0],
         exposure_risks: formData.exposure_risks.length > 0 ? formData.exposure_risks : null,
         health_recommendations: formData.health_recommendations.length > 0 ? formData.health_recommendations : null,
         next_examination_date: formData.next_examination_date || null
@@ -396,22 +397,6 @@ const HealthExaminationsContent = () => {
                     value={formData.position}
                     onChange={(e) => setFormData({...formData, position: e.target.value})}
                   />
-                </div>
-                <div>
-                  <Label>تاریخ معاینه</Label>
-                  <div className="w-full border border-input rounded-md p-2 bg-background">
-                      <DatePicker
-                        value={formData.examination_date ? gregorianToPersian(formData.examination_date) : ''}
-                        onChange={(dateObj: any) => {
-                          const gregorianDate = persianToGregorian(dateObj);
-                          if (gregorianDate) {
-                            setFormData({...formData, examination_date: gregorianDate});
-                          }
-                      }}
-                      locale="fa"
-                      shouldHighlightWeekends
-                    />
-                  </div>
                 </div>
                 <div>
                   <Label>نام پزشک معاینه‌کننده</Label>
