@@ -399,7 +399,7 @@ const HealthExaminationsContent = () => {
                 </div>
                 <div>
                   <Label>تاریخ معاینه</Label>
-                  <div className="w-full">
+                  <div className="w-full border border-input rounded-md p-2 bg-background">
                       <DatePicker
                         value={formData.examination_date ? gregorianToPersian(formData.examination_date) : ''}
                         onChange={(dateObj: any) => {
@@ -410,8 +410,7 @@ const HealthExaminationsContent = () => {
                       }}
                       locale="fa"
                       shouldHighlightWeekends
-                      inputPlaceholder="انتخاب تاریخ معاینه"
-                      inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                      renderInput={false}
                     />
                   </div>
                 </div>

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import moment from 'moment-jalaali';
 import DatePicker from 'react-persian-calendar-date-picker';
+import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -383,21 +384,23 @@ export const EnhancedRiskAssessmentContent = () => {
                       })} placeholder="نام فرآیند یا فعالیت" />
                       </div>
                       <div>
-                        <Label className="bg-teal-50">تاریخ بازنگری</Label>
-                        <div className="w-full">
-                          <DatePicker value={formData.review_date ? {
-                          year: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jYYYY')),
-                          month: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jMM')),
-                          day: parseInt(moment(formData.review_date, 'YYYY-MM-DD').format('jDD'))
-                        } : ''} onChange={(dateObj: any) => {
-                          if (dateObj && dateObj.year && dateObj.month && dateObj.day) {
-                            const gregorianDate = moment(`${dateObj.year}/${dateObj.month}/${dateObj.day}`, 'jYYYY/jM/jD').format('YYYY-MM-DD');
-                            setFormData({
-                              ...formData,
-                              review_date: gregorianDate
-                            });
-                          }
-                        }} locale="fa" shouldHighlightWeekends inputPlaceholder="انتخاب تاریخ بازنگری" inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md" />
+                        <Label>تاریخ بازنگری</Label>
+                        <div className="w-full border border-input rounded-md p-2 bg-background">
+                          <DatePicker 
+                            value={formData.review_date ? gregorianToPersian(formData.review_date) : ''}
+                            onChange={(dateObj: any) => {
+                              const gregorianDate = persianToGregorian(dateObj);
+                              if (gregorianDate) {
+                                setFormData({
+                                  ...formData,
+                                  review_date: gregorianDate
+                                });
+                              }
+                            }} 
+                            locale="fa" 
+                            shouldHighlightWeekends 
+                            renderInput={false}
+                          />
                         </div>
                       </div>
                       <div>
