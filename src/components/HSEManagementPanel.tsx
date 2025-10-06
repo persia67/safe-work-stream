@@ -540,6 +540,91 @@ const HSEManagementPanel = () => {
     return Math.min(finalScore, 10);
   };
 
+  // محاسبه امتیاز OWAS (Ovako Working Posture Analysis System)
+  const calculateOWAS = (formData) => {
+    const backCode = parseInt(formData.backPosture || 1);
+    const armsCode = parseInt(formData.armsPosture || 1);
+    const legsCode = parseInt(formData.legsPosture || 1);
+    const loadCode = parseInt(formData.loadWeight || 1);
+
+    // جدول ماتریس OWAS (ساده‌سازی شده)
+    const owasMatrix = {
+      '1111': 1, '1112': 1, '1113': 1, '1121': 1, '1122': 1, '1123': 2,
+      '1211': 1, '1212': 1, '1213': 1, '1221': 1, '1222': 2, '1223': 2,
+      '2111': 2, '2112': 2, '2113': 3, '2121': 2, '2122': 2, '2123': 3,
+      '2211': 2, '2212': 2, '2213': 3, '2221': 2, '2222': 3, '2223': 3,
+      '3111': 3, '3112': 3, '3113': 3, '3121': 3, '3122': 3, '3123': 4,
+      '3211': 2, '3212': 2, '3213': 3, '3221': 3, '3222': 3, '3223': 4,
+      '4111': 3, '4112': 3, '4113': 4, '4121': 4, '4122': 4, '4123': 4,
+      '4211': 3, '4212': 3, '4213': 4, '4221': 4, '4222': 4, '4223': 4
+    };
+
+    const key = `${backCode}${armsCode}${legsCode}${loadCode}`;
+    return owasMatrix[key] || 2;
+  };
+
+  // محاسبه امتیاز NIOSH (معادله بلند کردن بار)
+  const calculateNIOSH = (formData) => {
+    const LC = 23; // Load Constant (kg)
+    const HM = 25 / (parseInt(formData.horizontalDistance || 25)); // Horizontal Multiplier
+    const VM = 1 - (0.003 * Math.abs(parseInt(formData.verticalDistance || 75) - 75)); // Vertical Multiplier
+    const DM = 0.82 + (4.5 / parseInt(formData.verticalTravel || 10)); // Distance Multiplier
+    const AM = 1 - (0.0032 * parseInt(formData.asymmetryAngle || 0)); // Asymmetry Multiplier
+    const FM = parseFloat(formData.frequencyMultiplier || 1); // Frequency Multiplier
+    const CM = parseFloat(formData.couplingMultiplier || 1); // Coupling Multiplier
+
+    const RWL = LC * HM * VM * DM * AM * FM * CM; // Recommended Weight Limit
+    const actualWeight = parseFloat(formData.actualWeight || 10);
+    const LI = actualWeight / RWL; // Lifting Index
+
+    // تبدیل LI به امتیاز ریسک
+    if (LI < 1) return 1;
+    if (LI < 2) return 2;
+    if (LI < 3) return 3;
+    return 4;
+  };
+
+  // محاسبه امتیاز Strain Index
+  const calculateStrainIndex = (formData) => {
+    const intensityScore = parseInt(formData.intensityOfExertion || 1);
+    const durationScore = parseInt(formData.durationOfExertion || 1);
+    const effortsScore = parseInt(formData.effortsPerMinute || 1);
+    const postureScore = parseInt(formData.handWristPosture || 1);
+    const speedScore = parseInt(formData.speedOfWork || 1);
+    const durationPerDayScore = parseInt(formData.durationPerDay || 1);
+
+    // محاسبه Strain Index
+    const strainIndex = intensityScore * durationScore * effortsScore * 
+                        postureScore * speedScore * durationPerDayScore;
+
+    // تبدیل به امتیاز ریسک
+    if (strainIndex < 3) return 1;
+    if (strainIndex < 7) return 2;
+    if (strainIndex < 15) return 3;
+    return 4;
+  };
+
+  // محاسبه امتیاز QEC (Quick Exposure Check)
+  const calculateQEC = (formData) => {
+    // بخش A - پشت، شانه، مچ دست
+    const backScore = parseInt(formData.qecBackScore || 1);
+    const shoulderScore = parseInt(formData.qecShoulderScore || 1);
+    const wristScore = parseInt(formData.qecWristScore || 1);
+    const neckScore = parseInt(formData.qecNeckScore || 1);
+
+    // بخش B - زمان، نیرو، تکرار، ارتعاش
+    const durationScore = parseInt(formData.qecDurationScore || 1);
+    const forceScore = parseInt(formData.qecForceScore || 1);
+    const repetitionScore = parseInt(formData.qecRepetitionScore || 1);
+    const vibrationScore = parseInt(formData.qecVibrationScore || 1);
+
+    const exposureScore = backScore + shoulderScore + wristScore + neckScore + 
+                          durationScore + forceScore + repetitionScore + vibrationScore;
+
+    // امتیاز کل QEC
+    return Math.min(Math.round(exposureScore / 2), 10);
+  };
+
   // ذخیره اطلاعات
   const handleSave = () => {
     const now = new Date().toISOString().split('T')[0];
@@ -596,6 +681,47 @@ const HSEManagementPanel = () => {
             keyboard: parseInt(modalData.keyboardPositionScore || 1)
           },
           computerTime: parseInt(modalData.computerTimeScore || 1)
+        };
+      } else if (modalData.assessmentType === 'OWAS') {
+        finalScore = calculateOWAS(modalData);
+        bodyParts = {
+          backPosture: parseInt(modalData.backPosture || 1),
+          armsPosture: parseInt(modalData.armsPosture || 1),
+          legsPosture: parseInt(modalData.legsPosture || 1),
+          loadWeight: parseInt(modalData.loadWeight || 1)
+        };
+      } else if (modalData.assessmentType === 'NIOSH') {
+        finalScore = calculateNIOSH(modalData);
+        bodyParts = {
+          horizontalDistance: parseInt(modalData.horizontalDistance || 25),
+          verticalDistance: parseInt(modalData.verticalDistance || 75),
+          verticalTravel: parseInt(modalData.verticalTravel || 10),
+          asymmetryAngle: parseInt(modalData.asymmetryAngle || 0),
+          frequencyMultiplier: parseFloat(modalData.frequencyMultiplier || 1),
+          couplingMultiplier: parseFloat(modalData.couplingMultiplier || 1),
+          actualWeight: parseFloat(modalData.actualWeight || 10)
+        };
+      } else if (modalData.assessmentType === 'STRAIN_INDEX') {
+        finalScore = calculateStrainIndex(modalData);
+        bodyParts = {
+          intensityOfExertion: parseInt(modalData.intensityOfExertion || 1),
+          durationOfExertion: parseInt(modalData.durationOfExertion || 1),
+          effortsPerMinute: parseInt(modalData.effortsPerMinute || 1),
+          handWristPosture: parseInt(modalData.handWristPosture || 1),
+          speedOfWork: parseInt(modalData.speedOfWork || 1),
+          durationPerDay: parseInt(modalData.durationPerDay || 1)
+        };
+      } else if (modalData.assessmentType === 'QEC') {
+        finalScore = calculateQEC(modalData);
+        bodyParts = {
+          qecBackScore: parseInt(modalData.qecBackScore || 1),
+          qecShoulderScore: parseInt(modalData.qecShoulderScore || 1),
+          qecWristScore: parseInt(modalData.qecWristScore || 1),
+          qecNeckScore: parseInt(modalData.qecNeckScore || 1),
+          qecDurationScore: parseInt(modalData.qecDurationScore || 1),
+          qecForceScore: parseInt(modalData.qecForceScore || 1),
+          qecRepetitionScore: parseInt(modalData.qecRepetitionScore || 1),
+          qecVibrationScore: parseInt(modalData.qecVibrationScore || 1)
         };
       } else {
         // برای RULA و REBA
@@ -1539,6 +1665,10 @@ const ModalContent = ({ modalType, modalData, setModalData, handleSave, closeMod
                       <SelectItem value="RULA">RULA - Rapid Upper Limb Assessment</SelectItem>
                       <SelectItem value="REBA">REBA - Rapid Entire Body Assessment</SelectItem>
                       <SelectItem value="ROSA">ROSA - Rapid Office Strain Assessment</SelectItem>
+                      <SelectItem value="OWAS">OWAS - Ovako Working Posture Analysis</SelectItem>
+                      <SelectItem value="NIOSH">NIOSH - Lifting Equation</SelectItem>
+                      <SelectItem value="STRAIN_INDEX">Strain Index - SI</SelectItem>
+                      <SelectItem value="QEC">QEC - Quick Exposure Check</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1946,6 +2076,392 @@ const ModalContent = ({ modalType, modalData, setModalData, handleSave, closeMod
                         <SelectItem value="4">4 - بیش از 7 ساعت</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* OWAS Form */}
+              {modalData.assessmentType === 'OWAS' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">ارزیابی OWAS - تحلیل وضعیت کاری</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی وضعیت بدن در حین کار استفاده می‌شود</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>وضعیت کمر و پشت</Label>
+                      <Select value={modalData.backPosture || '1'} onValueChange={(value) => setModalData({...modalData, backPosture: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - صاف یا کمی خم</SelectItem>
+                          <SelectItem value="2">2 - خم شده به جلو یا عقب</SelectItem>
+                          <SelectItem value="3">3 - خم شده به جلو و چرخیده</SelectItem>
+                          <SelectItem value="4">4 - خم شده شدید یا پیچیده</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>وضعیت بازوها</Label>
+                      <Select value={modalData.armsPosture || '1'} onValueChange={(value) => setModalData({...modalData, armsPosture: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - هر دو بازو پایین</SelectItem>
+                          <SelectItem value="2">2 - یک بازو بالای شانه یا هر دو بازو پایین</SelectItem>
+                          <SelectItem value="3">3 - هر دو بازو بالای شانه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>وضعیت پاها</Label>
+                      <Select value={modalData.legsPosture || '1'} onValueChange={(value) => setModalData({...modalData, legsPosture: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - نشسته</SelectItem>
+                          <SelectItem value="2">2 - ایستاده روی دو پا</SelectItem>
+                          <SelectItem value="3">3 - ایستاده روی یک پا</SelectItem>
+                          <SelectItem value="4">4 - زانو زده یا خم شده</SelectItem>
+                          <SelectItem value="5">5 - راه رفتن</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>وزن بار</Label>
+                      <Select value={modalData.loadWeight || '1'} onValueChange={(value) => setModalData({...modalData, loadWeight: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - کمتر از 10 کیلوگرم</SelectItem>
+                          <SelectItem value="2">2 - بین 10-20 کیلوگرم</SelectItem>
+                          <SelectItem value="3">3 - بیش از 20 کیلوگرم</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* NIOSH Form */}
+              {modalData.assessmentType === 'NIOSH' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">معادله NIOSH - ارزیابی بلند کردن بار</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی خطرات بلند کردن و جابجایی بار استفاده می‌شود</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>وزن واقعی بار (کیلوگرم)</Label>
+                      <Input
+                        type="number"
+                        value={modalData.actualWeight || '10'}
+                        onChange={(e) => setModalData({...modalData, actualWeight: e.target.value})}
+                        placeholder="مثال: 15"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>فاصله افقی از بدن (سانتیمتر)</Label>
+                      <Input
+                        type="number"
+                        value={modalData.horizontalDistance || '25'}
+                        onChange={(e) => setModalData({...modalData, horizontalDistance: e.target.value})}
+                        placeholder="مثال: 30"
+                      />
+                      <p className="text-xs text-muted-foreground">فاصله بهینه: 25 سانتیمتر</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ارتفاع عمودی شروع (سانتیمتر)</Label>
+                      <Input
+                        type="number"
+                        value={modalData.verticalDistance || '75'}
+                        onChange={(e) => setModalData({...modalData, verticalDistance: e.target.value})}
+                        placeholder="مثال: 80"
+                      />
+                      <p className="text-xs text-muted-foreground">ارتفاع بهینه: 75 سانتیمتر</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>مسافت عمودی حرکت (سانتیمتر)</Label>
+                      <Input
+                        type="number"
+                        value={modalData.verticalTravel || '10'}
+                        onChange={(e) => setModalData({...modalData, verticalTravel: e.target.value})}
+                        placeholder="مثال: 20"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>زاویه چرخش بدن (درجه)</Label>
+                      <Input
+                        type="number"
+                        value={modalData.asymmetryAngle || '0'}
+                        onChange={(e) => setModalData({...modalData, asymmetryAngle: e.target.value})}
+                        placeholder="مثال: 15"
+                      />
+                      <p className="text-xs text-muted-foreground">بهینه: 0 درجه</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ضریب تکرار</Label>
+                      <Select value={modalData.frequencyMultiplier || '1'} onValueChange={(value) => setModalData({...modalData, frequencyMultiplier: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1.0 - کمتر از 1 بار در 5 دقیقه</SelectItem>
+                          <SelectItem value="0.94">0.94 - 1 بار در دقیقه</SelectItem>
+                          <SelectItem value="0.84">0.84 - 4 بار در دقیقه</SelectItem>
+                          <SelectItem value="0.75">0.75 - 9 بار در دقیقه</SelectItem>
+                          <SelectItem value="0.52">0.52 - 12 بار در دقیقه</SelectItem>
+                          <SelectItem value="0.37">0.37 - 15 بار در دقیقه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>کیفیت گرفتن بار</Label>
+                      <Select value={modalData.couplingMultiplier || '1'} onValueChange={(value) => setModalData({...modalData, couplingMultiplier: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1.0 - عالی (دسته مناسب)</SelectItem>
+                          <SelectItem value="0.95">0.95 - خوب (ظرف با لبه)</SelectItem>
+                          <SelectItem value="0.90">0.90 - ضعیف (بدون دسته)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Strain Index Form */}
+              {modalData.assessmentType === 'STRAIN_INDEX' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">Strain Index - شاخص فشار دست و مچ</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی خطرات اختلالات اسکلتی عضلانی دست و مچ استفاده می‌شود</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>شدت کار (Intensity of Exertion)</Label>
+                      <Select value={modalData.intensityOfExertion || '1'} onValueChange={(value) => setModalData({...modalData, intensityOfExertion: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - سبک (کمتر از 10% حداکثر نیرو)</SelectItem>
+                          <SelectItem value="3">3 - متوسط (10-29%)</SelectItem>
+                          <SelectItem value="6">6 - سنگین (30-49%)</SelectItem>
+                          <SelectItem value="9">9 - خیلی سنگین (50-79%)</SelectItem>
+                          <SelectItem value="13">13 - بسیار سنگین (80% و بیشتر)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>مدت زمان هر تلاش (Duration)</Label>
+                      <Select value={modalData.durationOfExertion || '1'} onValueChange={(value) => setModalData({...modalData, durationOfExertion: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0.5">0.5 - کمتر از 10% زمان</SelectItem>
+                          <SelectItem value="1">1 - بین 10-29%</SelectItem>
+                          <SelectItem value="1.5">1.5 - بین 30-49%</SelectItem>
+                          <SelectItem value="2">2 - بین 50-79%</SelectItem>
+                          <SelectItem value="3">3 - بیش از 80%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>تعداد تلاش در دقیقه (Efforts/min)</Label>
+                      <Select value={modalData.effortsPerMinute || '1'} onValueChange={(value) => setModalData({...modalData, effortsPerMinute: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0.5">0.5 - کمتر از 4 بار</SelectItem>
+                          <SelectItem value="1">1 - بین 4-8 بار</SelectItem>
+                          <SelectItem value="1.5">1.5 - بین 9-14 بار</SelectItem>
+                          <SelectItem value="2">2 - بین 15-19 بار</SelectItem>
+                          <SelectItem value="3">3 - بیش از 20 بار</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>وضعیت دست و مچ (Posture)</Label>
+                      <Select value={modalData.handWristPosture || '1'} onValueChange={(value) => setModalData({...modalData, handWristPosture: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - وضعیت خنثی (مچ صاف)</SelectItem>
+                          <SelectItem value="1.5">1.5 - کمی غیرخنثی</SelectItem>
+                          <SelectItem value="2">2 - متوسط غیرخنثی</SelectItem>
+                          <SelectItem value="2.5">2.5 - بسیار غیرخنثی</SelectItem>
+                          <SelectItem value="3">3 - وضعیت بسیار نامناسب</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>سرعت کار (Speed of Work)</Label>
+                      <Select value={modalData.speedOfWork || '1'} onValueChange={(value) => setModalData({...modalData, speedOfWork: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - خیلی آهسته</SelectItem>
+                          <SelectItem value="1.5">1.5 - آهسته</SelectItem>
+                          <SelectItem value="2">2 - متوسط</SelectItem>
+                          <SelectItem value="2.5">2.5 - سریع</SelectItem>
+                          <SelectItem value="3">3 - خیلی سریع</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>مدت زمان کار در روز</Label>
+                      <Select value={modalData.durationPerDay || '1'} onValueChange={(value) => setModalData({...modalData, durationPerDay: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0.25">0.25 - کمتر از 1 ساعت</SelectItem>
+                          <SelectItem value="0.5">0.5 - بین 1-2 ساعت</SelectItem>
+                          <SelectItem value="0.75">0.75 - بین 2-4 ساعت</SelectItem>
+                          <SelectItem value="1">1 - بین 4-8 ساعت</SelectItem>
+                          <SelectItem value="1.5">1.5 - بیش از 8 ساعت</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* QEC Form */}
+              {modalData.assessmentType === 'QEC' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">QEC - بررسی سریع قرارگیری در معرض</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی سریع قرارگیری در معرض خطرات ارگونومیک استفاده می‌شود</p>
+                  
+                  <div className="space-y-3">
+                    <h5 className="font-medium">بخش A - وضعیت بدن</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>وضعیت پشت/کمر</Label>
+                        <Select value={modalData.qecBackScore || '1'} onValueChange={(value) => setModalData({...modalData, qecBackScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - صاف یا خم جزئی</SelectItem>
+                            <SelectItem value="2">2 - خم شده متوسط</SelectItem>
+                            <SelectItem value="3">3 - خم شده شدید یا چرخیده</SelectItem>
+                            <SelectItem value="4">4 - وضعیت بحرانی</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>وضعیت شانه/بازو</Label>
+                        <Select value={modalData.qecShoulderScore || '1'} onValueChange={(value) => setModalData({...modalData, qecShoulderScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - پایین تر از شانه</SelectItem>
+                            <SelectItem value="2">2 - در سطح شانه</SelectItem>
+                            <SelectItem value="3">3 - بالاتر از شانه</SelectItem>
+                            <SelectItem value="4">4 - بالا و کشیده</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>وضعیت مچ دست</Label>
+                        <Select value={modalData.qecWristScore || '1'} onValueChange={(value) => setModalData({...modalData, qecWristScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - صاف</SelectItem>
+                            <SelectItem value="2">2 - خم یا کشیده جزئی</SelectItem>
+                            <SelectItem value="3">3 - خم یا کشیده شدید</SelectItem>
+                            <SelectItem value="4">4 - پیچ خورده</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>وضعیت گردن</Label>
+                        <Select value={modalData.qecNeckScore || '1'} onValueChange={(value) => setModalData({...modalData, qecNeckScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - صاف</SelectItem>
+                            <SelectItem value="2">2 - خم شده جزئی</SelectItem>
+                            <SelectItem value="3">3 - خم شده شدید</SelectItem>
+                            <SelectItem value="4">4 - خم و چرخیده</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h5 className="font-medium">بخش B - قرارگیری در معرض</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>مدت زمان فعالیت</Label>
+                        <Select value={modalData.qecDurationScore || '1'} onValueChange={(value) => setModalData({...modalData, qecDurationScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - کمتر از 2 ساعت</SelectItem>
+                            <SelectItem value="2">2 - بین 2-4 ساعت</SelectItem>
+                            <SelectItem value="3">3 - بیش از 4 ساعت</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>نیروی وارده</Label>
+                        <Select value={modalData.qecForceScore || '1'} onValueChange={(value) => setModalData({...modalData, qecForceScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - ملایم</SelectItem>
+                            <SelectItem value="2">2 - متوسط</SelectItem>
+                            <SelectItem value="3">3 - سنگین</SelectItem>
+                            <SelectItem value="4">4 - خیلی سنگین</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>تکرار حرکت</Label>
+                        <Select value={modalData.qecRepetitionScore || '1'} onValueChange={(value) => setModalData({...modalData, qecRepetitionScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - کم</SelectItem>
+                            <SelectItem value="2">2 - متوسط</SelectItem>
+                            <SelectItem value="3">3 - زیاد</SelectItem>
+                            <SelectItem value="4">4 - خیلی زیاد</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>ارتعاش</Label>
+                        <Select value={modalData.qecVibrationScore || '1'} onValueChange={(value) => setModalData({...modalData, qecVibrationScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - بدون ارتعاش</SelectItem>
+                            <SelectItem value="2">2 - ارتعاش کم</SelectItem>
+                            <SelectItem value="3">3 - ارتعاش متوسط</SelectItem>
+                            <SelectItem value="4">4 - ارتعاش زیاد</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
