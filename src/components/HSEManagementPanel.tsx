@@ -206,6 +206,45 @@ const HSEManagementPanel = () => {
       },
       status: 'اقدام فوری',
       followUpDate: '2025-02-10'
+    },
+    {
+      id: 3,
+      employeeName: 'سارا کریمی',
+      department: 'اداری',
+      position: 'کارشناس',
+      assessmentType: 'ROSA',
+      date: '2025-01-26',
+      assessor: 'مهندس HSE',
+      workstation: 'دفتر طبقه دوم',
+      shiftDuration: '8 ساعت',
+      riskLevel: 'متوسط',
+      finalScore: 4,
+      recommendations: [
+        'تنظیم ارتفاع صندلی و مانیتور',
+        'استفاده از پایه لپ‌تاپ',
+        'استراحت منظم و تمرینات کششی'
+      ],
+      bodyParts: {
+        chair: {
+          height: 2,
+          depth: 2,
+          armrest: 2,
+          backrest: 1
+        },
+        display: {
+          monitorHeight: 2,
+          monitorDistance: 2,
+          phone: 1,
+          multiMonitor: 1
+        },
+        peripheral: {
+          mouse: 2,
+          keyboard: 2
+        },
+        computerTime: 3
+      },
+      status: 'نیاز به بهبود',
+      followUpDate: '2025-02-26'
     }
   ]);
 
@@ -452,7 +491,7 @@ const HSEManagementPanel = () => {
     return Math.min(finalScore, 7);
   };
 
-    // محاسبه امتیاز REBA
+  // محاسبه امتیاز REBA
   const calculateREBA = (bodyParts) => {
     const { neck, trunk, upperArm, lowerArm, wrist } = bodyParts;
     const leg = bodyParts.leg || { score: 1, angle: 0 };
@@ -467,6 +506,38 @@ const HSEManagementPanel = () => {
     let finalScore = Math.round((trunkScore + armScore + neck.score) / 3);
     
     return Math.min(finalScore, 11);
+  };
+
+  // محاسبه امتیاز ROSA
+  const calculateROSA = (formData) => {
+    // بخش A - صندلی
+    const chairScore = (
+      parseInt(formData.chairHeightScore || 1) +
+      parseInt(formData.chairDepthScore || 1) +
+      parseInt(formData.chairArmrestScore || 1) +
+      parseInt(formData.chairBackrestScore || 1)
+    ) / 4;
+
+    // بخش B - مانیتور و تلفن
+    const displayScore = (
+      parseInt(formData.monitorHeightScore || 1) +
+      parseInt(formData.monitorDistanceScore || 1) +
+      parseInt(formData.phoneScore || 1) +
+      parseInt(formData.multiMonitorScore || 1)
+    ) / 4;
+
+    // بخش C - ماوس و کیبورد
+    const peripheralScore = (
+      parseInt(formData.mousePositionScore || 1) +
+      parseInt(formData.keyboardPositionScore || 1)
+    ) / 2;
+
+    // امتیاز نهایی ROSA
+    const baseScore = (chairScore + displayScore + peripheralScore) / 3;
+    const timeMultiplier = parseInt(formData.computerTimeScore || 1) / 2;
+    const finalScore = Math.round(baseScore * timeMultiplier);
+    
+    return Math.min(finalScore, 10);
   };
 
   // ذخیره اطلاعات
@@ -499,20 +570,50 @@ const HSEManagementPanel = () => {
     }
 
     if (modalType === 'ergonomic') {
-      const bodyParts: any = {
-        neck: { score: parseInt(modalData.neckScore) || 1, angle: parseInt(modalData.neckAngle) || 0 },
-        trunk: { score: parseInt(modalData.trunkScore) || 1, angle: parseInt(modalData.trunkAngle) || 0 },
-        upperArm: { score: parseInt(modalData.upperArmScore) || 1, angle: parseInt(modalData.upperArmAngle) || 0 },
-        lowerArm: { score: parseInt(modalData.lowerArmScore) || 1, angle: parseInt(modalData.lowerArmAngle) || 0 },
-        wrist: { score: parseInt(modalData.wristScore) || 1, angle: parseInt(modalData.wristAngle) || 0 }
-      };
+      let bodyParts: any = {};
+      let finalScore = 0;
 
-      if (modalData.assessmentType === 'REBA') {
-        bodyParts.leg = { score: parseInt(modalData.legScore) || 1, angle: parseInt(modalData.legAngle) || 0 };
+      if (modalData.assessmentType === 'ROSA') {
+        // برای ROSA از داده‌های فرم استفاده می‌کنیم
+        finalScore = calculateROSA(modalData);
+        
+        // برای ROSA یک ساختار داده متفاوت داریم
+        bodyParts = {
+          chair: {
+            height: parseInt(modalData.chairHeightScore || 1),
+            depth: parseInt(modalData.chairDepthScore || 1),
+            armrest: parseInt(modalData.chairArmrestScore || 1),
+            backrest: parseInt(modalData.chairBackrestScore || 1)
+          },
+          display: {
+            monitorHeight: parseInt(modalData.monitorHeightScore || 1),
+            monitorDistance: parseInt(modalData.monitorDistanceScore || 1),
+            phone: parseInt(modalData.phoneScore || 1),
+            multiMonitor: parseInt(modalData.multiMonitorScore || 1)
+          },
+          peripheral: {
+            mouse: parseInt(modalData.mousePositionScore || 1),
+            keyboard: parseInt(modalData.keyboardPositionScore || 1)
+          },
+          computerTime: parseInt(modalData.computerTimeScore || 1)
+        };
+      } else {
+        // برای RULA و REBA
+        bodyParts = {
+          neck: { score: parseInt(modalData.neckScore) || 1, angle: 0 },
+          trunk: { score: parseInt(modalData.trunkScore) || 1, angle: 0 },
+          upperArm: { score: parseInt(modalData.upperArmScore) || 1, angle: 0 },
+          lowerArm: { score: parseInt(modalData.lowerArmScore) || 1, angle: 0 },
+          wrist: { score: parseInt(modalData.wristScore) || 1, angle: 0 }
+        };
+
+        if (modalData.assessmentType === 'REBA') {
+          bodyParts.leg = { score: parseInt(modalData.legScore) || 1, angle: 0 };
+        }
+
+        finalScore = modalData.assessmentType === 'RULA' ? 
+          calculateRULA(bodyParts) : calculateREBA(bodyParts);
       }
-
-      const finalScore = modalData.assessmentType === 'RULA' ? 
-        calculateRULA(bodyParts) : calculateREBA(bodyParts);
 
       const riskLevel = finalScore <= 2 ? 'کم' : 
                        finalScore <= 4 ? 'متوسط' : 
@@ -1435,8 +1536,9 @@ const ModalContent = ({ modalType, modalData, setModalData, handleSave, closeMod
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="RULA">RULA</SelectItem>
-                      <SelectItem value="REBA">REBA</SelectItem>
+                      <SelectItem value="RULA">RULA - Rapid Upper Limb Assessment</SelectItem>
+                      <SelectItem value="REBA">REBA - Rapid Entire Body Assessment</SelectItem>
+                      <SelectItem value="ROSA">ROSA - Rapid Office Strain Assessment</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1450,64 +1552,403 @@ const ModalContent = ({ modalType, modalData, setModalData, handleSave, closeMod
                 />
               </div>
               
-              {/* Body Parts Assessment */}
-              <div className="space-y-4 p-4 border border-border rounded-lg">
-                <h4 className="font-semibold">امتیازدهی اعضای بدن</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>گردن - امتیاز</Label>
-                    <Select value={modalData.neckScore || '1'} onValueChange={(value) => setModalData({...modalData, neckScore: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1,2,3,4].map(score => (
-                          <SelectItem key={score} value={score.toString()}>{score}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {/* RULA Form */}
+              {modalData.assessmentType === 'RULA' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">ارزیابی RULA - اندام‌های فوقانی</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی کارهای تکراری اندام فوقانی استفاده می‌شود</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>بازوی بالا (Upper Arm)</Label>
+                      <Select value={modalData.upperArmScore || '1'} onValueChange={(value) => setModalData({...modalData, upperArmScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - زاویه 20- درجه</SelectItem>
+                          <SelectItem value="2">2 - زاویه 20-45 درجه</SelectItem>
+                          <SelectItem value="3">3 - زاویه 45-90 درجه</SelectItem>
+                          <SelectItem value="4">4 - زاویه بیش از 90 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ساعد (Lower Arm)</Label>
+                      <Select value={modalData.lowerArmScore || '1'} onValueChange={(value) => setModalData({...modalData, lowerArmScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - زاویه 60-100 درجه</SelectItem>
+                          <SelectItem value="2">2 - زاویه کمتر از 60 یا بیشتر از 100 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>مچ دست (Wrist)</Label>
+                      <Select value={modalData.wristScore || '1'} onValueChange={(value) => setModalData({...modalData, wristScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - حالت خنثی</SelectItem>
+                          <SelectItem value="2">2 - خم شدن 0-15 درجه</SelectItem>
+                          <SelectItem value="3">3 - خم شدن بیش از 15 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>چرخش مچ (Wrist Twist)</Label>
+                      <Select value={modalData.wristTwistScore || '1'} onValueChange={(value) => setModalData({...modalData, wristTwistScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - چرخش در محدوده میانی</SelectItem>
+                          <SelectItem value="2">2 - چرخش در انتها</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>گردن (Neck)</Label>
+                      <Select value={modalData.neckScore || '1'} onValueChange={(value) => setModalData({...modalData, neckScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - خم شدن 0-10 درجه</SelectItem>
+                          <SelectItem value="2">2 - خم شدن 10-20 درجه</SelectItem>
+                          <SelectItem value="3">3 - خم شدن بیش از 20 درجه</SelectItem>
+                          <SelectItem value="4">4 - گردن کشیده شده</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>تنه (Trunk)</Label>
+                      <Select value={modalData.trunkScore || '1'} onValueChange={(value) => setModalData({...modalData, trunkScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - نشسته با پشتیبانی خوب</SelectItem>
+                          <SelectItem value="2">2 - خم شدن 0-20 درجه</SelectItem>
+                          <SelectItem value="3">3 - خم شدن 20-60 درجه</SelectItem>
+                          <SelectItem value="4">4 - خم شدن بیش از 60 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>بار عضلانی (Muscle Use)</Label>
+                      <Select value={modalData.muscleScore || '0'} onValueChange={(value) => setModalData({...modalData, muscleScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0 - عضلات استاتیک نیست</SelectItem>
+                          <SelectItem value="1">1 - وضعیت ثابت بیش از 1 دقیقه یا تکرار بیش از 4 بار در دقیقه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>نیرو/بار (Force/Load)</Label>
+                      <Select value={modalData.forceScore || '0'} onValueChange={(value) => setModalData({...modalData, forceScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0 - کمتر از 2 کیلوگرم</SelectItem>
+                          <SelectItem value="1">1 - بین 2-10 کیلوگرم</SelectItem>
+                          <SelectItem value="2">2 - بیش از 10 کیلوگرم یا ضربه‌ای/ناگهانی</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>تنه - امتیاز</Label>
-                    <Select value={modalData.trunkScore || '1'} onValueChange={(value) => setModalData({...modalData, trunkScore: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1,2,3,4,5].map(score => (
-                          <SelectItem key={score} value={score.toString()}>{score}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                </div>
+              )}
+
+              {/* REBA Form */}
+              {modalData.assessmentType === 'REBA' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">ارزیابی REBA - کل بدن</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی وضعیت‌های کاری کل بدن استفاده می‌شود</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>گردن (Neck)</Label>
+                      <Select value={modalData.neckScore || '1'} onValueChange={(value) => setModalData({...modalData, neckScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - خم شدن 0-20 درجه</SelectItem>
+                          <SelectItem value="2">2 - خم شدن بیش از 20 درجه یا کشیده شده</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>تنه (Trunk)</Label>
+                      <Select value={modalData.trunkScore || '1'} onValueChange={(value) => setModalData({...modalData, trunkScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - صاف</SelectItem>
+                          <SelectItem value="2">2 - خم شدن 0-20 درجه</SelectItem>
+                          <SelectItem value="3">3 - خم شدن 20-60 درجه</SelectItem>
+                          <SelectItem value="4">4 - خم شدن بیش از 60 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>پاها (Legs)</Label>
+                      <Select value={modalData.legScore || '1'} onValueChange={(value) => setModalData({...modalData, legScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - نشسته، پشتیبانی دو طرفه</SelectItem>
+                          <SelectItem value="2">2 - ایستاده، پشتیبانی یک طرفه</SelectItem>
+                          <SelectItem value="3">3 - نامتعادل</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>بازوی بالا (Upper Arm)</Label>
+                      <Select value={modalData.upperArmScore || '1'} onValueChange={(value) => setModalData({...modalData, upperArmScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - زاویه 20- درجه</SelectItem>
+                          <SelectItem value="2">2 - زاویه 20-45 درجه</SelectItem>
+                          <SelectItem value="3">3 - زاویه 45-90 درجه</SelectItem>
+                          <SelectItem value="4">4 - زاویه بیش از 90 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ساعد (Lower Arm)</Label>
+                      <Select value={modalData.lowerArmScore || '1'} onValueChange={(value) => setModalData({...modalData, lowerArmScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - زاویه 60-100 درجه</SelectItem>
+                          <SelectItem value="2">2 - زاویه کمتر از 60 یا بیشتر از 100 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>مچ دست (Wrist)</Label>
+                      <Select value={modalData.wristScore || '1'} onValueChange={(value) => setModalData({...modalData, wristScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 - خم شدن 0-15 درجه</SelectItem>
+                          <SelectItem value="2">2 - خم شدن بیش از 15 درجه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>فعالیت عضلانی (Activity)</Label>
+                      <Select value={modalData.activityScore || '0'} onValueChange={(value) => setModalData({...modalData, activityScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0 - یک یا چند اندام ثابت بیش از 1 دقیقه نیست</SelectItem>
+                          <SelectItem value="1">1 - یک یا چند اندام ثابت بیش از 1 دقیقه</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>نیرو/بار (Load)</Label>
+                      <Select value={modalData.loadScore || '0'} onValueChange={(value) => setModalData({...modalData, loadScore: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0 - کمتر از 5 کیلوگرم</SelectItem>
+                          <SelectItem value="1">1 - بین 5-10 کیلوگرم</SelectItem>
+                          <SelectItem value="2">2 - بیش از 10 کیلوگرم</SelectItem>
+                          <SelectItem value="3">3 - ضربه‌ای یا ناگهانی</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>بازوی بالا - امتیاز</Label>
-                    <Select value={modalData.upperArmScore || '1'} onValueChange={(value) => setModalData({...modalData, upperArmScore: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1,2,3,4].map(score => (
-                          <SelectItem key={score} value={score.toString()}>{score}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                </div>
+              )}
+
+              {/* ROSA Form */}
+              {modalData.assessmentType === 'ROSA' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg">
+                  <h4 className="font-semibold">ارزیابی ROSA - محیط اداری</h4>
+                  <p className="text-sm text-muted-foreground">این روش برای ارزیابی محیط‌های کار اداری و رایانه‌ای استفاده می‌شود</p>
+                  
+                  <div className="space-y-3">
+                    <h5 className="font-medium">بخش A - صندلی (Chair)</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>ارتفاع صندلی</Label>
+                        <Select value={modalData.chairHeightScore || '1'} onValueChange={(value) => setModalData({...modalData, chairHeightScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - ارتفاع مناسب (زانو 90 درجه)</SelectItem>
+                            <SelectItem value="2">2 - کمی نامناسب</SelectItem>
+                            <SelectItem value="3">3 - نامناسب (پاها آویزان یا فشرده)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>عمق صندلی</Label>
+                        <Select value={modalData.chairDepthScore || '1'} onValueChange={(value) => setModalData({...modalData, chairDepthScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - فاصله 2-4 انگشت تا لبه زانو</SelectItem>
+                            <SelectItem value="2">2 - کمی نامناسب</SelectItem>
+                            <SelectItem value="3">3 - عمق نامناسب</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>دسته‌های صندلی</Label>
+                        <Select value={modalData.chairArmrestScore || '1'} onValueChange={(value) => setModalData({...modalData, chairArmrestScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - ارتفاع مناسب، شانه‌ها راحت</SelectItem>
+                            <SelectItem value="2">2 - دسته‌ها موجود اما استفاده نمی‌شود</SelectItem>
+                            <SelectItem value="3">3 - بدون دسته یا نامناسب</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>تکیه‌گاه کمر</Label>
+                        <Select value={modalData.chairBackrestScore || '1'} onValueChange={(value) => setModalData({...modalData, chairBackrestScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - پشتیبانی کامل کمر</SelectItem>
+                            <SelectItem value="2">2 - پشتیبانی جزئی</SelectItem>
+                            <SelectItem value="3">3 - بدون پشتیبانی مناسب</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
+
+                  <div className="space-y-3">
+                    <h5 className="font-medium">بخش B - مانیتور و تلفن (Monitor & Phone)</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>ارتفاع مانیتور</Label>
+                        <Select value={modalData.monitorHeightScore || '1'} onValueChange={(value) => setModalData({...modalData, monitorHeightScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - بالای مانیتور در سطح چشم</SelectItem>
+                            <SelectItem value="2">2 - کمی بالاتر یا پایین‌تر</SelectItem>
+                            <SelectItem value="3">3 - خیلی بالا یا پایین</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>فاصله مانیتور</Label>
+                        <Select value={modalData.monitorDistanceScore || '1'} onValueChange={(value) => setModalData({...modalData, monitorDistanceScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - فاصله یک بازو (50-70 سانتی‌متر)</SelectItem>
+                            <SelectItem value="2">2 - کمی نزدیک یا دور</SelectItem>
+                            <SelectItem value="3">3 - خیلی نزدیک یا دور</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>استفاده از تلفن</Label>
+                        <Select value={modalData.phoneScore || '1'} onValueChange={(value) => setModalData({...modalData, phoneScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - هندزفری یا استفاده کم</SelectItem>
+                            <SelectItem value="2">2 - استفاده متوسط بدون هندزفری</SelectItem>
+                            <SelectItem value="3">3 - استفاده زیاد بین گردن و شانه</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>مانیتورهای اضافی</Label>
+                        <Select value={modalData.multiMonitorScore || '1'} onValueChange={(value) => setModalData({...modalData, multiMonitorScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - یک مانیتور یا چینش مناسب</SelectItem>
+                            <SelectItem value="2">2 - دو مانیتور، چرخش گردن کم</SelectItem>
+                            <SelectItem value="3">3 - چرخش گردن زیاد</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h5 className="font-medium">بخش C - ماوس و کیبورد (Mouse & Keyboard)</h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>موقعیت ماوس</Label>
+                        <Select value={modalData.mousePositionScore || '1'} onValueChange={(value) => setModalData({...modalData, mousePositionScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - در کنار کیبورد، در دسترس</SelectItem>
+                            <SelectItem value="2">2 - کمی دور</SelectItem>
+                            <SelectItem value="3">3 - خیلی دور، کشیدگی بازو</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>موقعیت کیبورد</Label>
+                        <Select value={modalData.keyboardPositionScore || '1'} onValueChange={(value) => setModalData({...modalData, keyboardPositionScore: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 - مچ صاف، آرنج 90 درجه</SelectItem>
+                            <SelectItem value="2">2 - کمی خم شده</SelectItem>
+                            <SelectItem value="3">3 - خم شدگی یا کشیدگی زیاد</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label>مچ دست - امتیاز</Label>
-                    <Select value={modalData.wristScore || '1'} onValueChange={(value) => setModalData({...modalData, wristScore: value})}>
+                    <Label>مدت زمان استفاده روزانه از رایانه</Label>
+                    <Select value={modalData.computerTimeScore || '1'} onValueChange={(value) => setModalData({...modalData, computerTimeScore: value})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[1,2,3,4].map(score => (
-                          <SelectItem key={score} value={score.toString()}>{score}</SelectItem>
-                        ))}
+                        <SelectItem value="1">1 - کمتر از 1 ساعت</SelectItem>
+                        <SelectItem value="2">2 - بین 1-4 ساعت</SelectItem>
+                        <SelectItem value="3">3 - بین 4-7 ساعت</SelectItem>
+                        <SelectItem value="4">4 - بیش از 7 ساعت</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-              </div>
+              )}
             </>
           )}
 
