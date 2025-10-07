@@ -37,7 +37,8 @@ import {
   XCircle,
   Thermometer,
   Mail,
-  Phone
+  Phone,
+  Sparkles
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import HealthExaminationsContent from './HealthExaminationsContent';
@@ -45,6 +46,7 @@ import EditableSettingsContent from './EditableSettingsContent';
 import { SafetyTrainingContent } from './SafetyTrainingContent';
 import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
 import { HSEAIChat } from './HSEAIChat';
+import { ThemeLanguageToggle } from './ThemeLanguageToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -59,9 +61,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayPersian } from '@/lib/dateUtils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const HSEManagementPanel = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
@@ -916,62 +920,95 @@ const HSEManagementPanel = () => {
   // رندر صفحه ورود
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-large">
-          <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center shadow-medium">
-              <Shield className="w-8 h-8 text-primary-foreground" />
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4wNSIvPjwvZz48L3N2Zz4=')] opacity-40" />
+        
+        <div className="absolute top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-hse-info/10 rounded-full blur-3xl animate-pulse delay-700" />
+        
+        <Card className="w-full max-w-md shadow-large relative z-10 backdrop-blur-sm bg-card/95 border-primary/20">
+          <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2">
+            <ThemeLanguageToggle />
+          </div>
+          
+          <CardHeader className="text-center space-y-4 pt-12">
+            <div className="mx-auto w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Shield className="w-10 h-10 text-primary-foreground relative z-10" />
+              <Sparkles className="w-4 h-4 text-primary-foreground/70 absolute top-2 right-2 animate-pulse" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-primary">سیستم مدیریت HSE</CardTitle>
+              <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                {t('login.title')}
+              </CardTitle>
               <CardDescription className="text-base mt-2">گروه صنعتی دانیال استیل</CardDescription>
             </div>
           </CardHeader>
-          <CardContent>
+          
+          <CardContent className="space-y-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">نام کاربری</Label>
+                <Label htmlFor="username" className="text-sm font-medium">{t('login.username')}</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="نام کاربری خود را وارد کنید"
+                  placeholder={t('login.username')}
                   value={loginForm.username}
                   onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
-                  className="text-right"
+                  className="text-right transition-all focus:shadow-soft"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">رمز عبور</Label>
+                <Label htmlFor="password" className="text-sm font-medium">{t('login.password')}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="رمز عبور خود را وارد کنید"
+                  placeholder={t('login.password')}
                   value={loginForm.password}
                   onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                  className="text-right"
+                  className="text-right transition-all focus:shadow-soft"
                   required
                 />
               </div>
               {loginError && (
-                <div className="p-3 bg-hse-danger/10 border border-hse-danger/20 rounded-md">
+                <div className="p-3 bg-hse-danger/10 border border-hse-danger/20 rounded-lg backdrop-blur-sm">
                   <p className="text-sm text-hse-danger text-right">{loginError}</p>
                 </div>
               )}
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+                className="w-full bg-gradient-primary hover:shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
                 disabled={loading}
               >
-                {loading ? 'در حال ورود...' : 'ورود به سیستم'}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    در حال ورود...
+                  </span>
+                ) : t('login.button')}
               </Button>
             </form>
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <h4 className="font-semibold text-sm mb-2 text-right">حساب‌های آزمایشی:</h4>
-              <div className="space-y-1 text-xs text-muted-foreground text-right">
-                <p>مدیر: admin / admin123</p>
-                <p>مهندس HSE: hse_eng / hse123</p>
-                <p>افسر ایمنی: safety1 / safe123</p>
+            
+            <div className="mt-6 p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-border/50 backdrop-blur-sm">
+              <h4 className="font-semibold text-sm mb-3 text-right flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                حساب‌های آزمایشی:
+              </h4>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
+                  <span>admin / admin123</span>
+                  <Badge variant="secondary" className="text-xs">مدیر</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
+                  <span>hse_eng / hse123</span>
+                  <Badge variant="secondary" className="text-xs">مهندس HSE</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
+                  <span>safety1 / safe123</span>
+                  <Badge variant="secondary" className="text-xs">افسر ایمنی</Badge>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -983,81 +1020,88 @@ const HSEManagementPanel = () => {
   // رندر اصلی برنامه
   return (
     <div className="min-h-screen bg-background text-foreground w-full" dir="rtl">
-      <div className="flex w-full min-h-screen">{/*... keep existing code*/}
-        {/* Sidebar - مخفی در موبایل */}
-        <div className="hidden lg:block w-64 bg-card border-l border-border h-screen fixed right-0 top-0 shadow-medium z-30">
-          {/* Header */}
-          <div className="p-4 lg:p-6 border-b border-border">
-            <div className="flex items-center gap-2 lg:gap-3">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <Shield className="w-5 h-5 lg:w-6 lg:h-6 text-primary-foreground" />
+      <div className="flex w-full min-h-screen">
+        {/* Enhanced Sidebar */}
+        <div className="hidden lg:block w-64 bg-gradient-to-b from-sidebar-background to-sidebar-background/95 border-l border-sidebar-border/50 h-screen fixed right-0 top-0 shadow-large z-30 backdrop-blur-sm">
+          {/* Header with gradient */}
+          <div className="p-6 border-b border-sidebar-border/30 bg-gradient-to-br from-sidebar-accent/20 to-transparent">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary via-hse-info to-hse-success rounded-xl flex items-center justify-center shadow-glow relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Shield className="w-6 h-6 text-white relative z-10 drop-shadow-md" />
               </div>
               <div className="min-w-0">
-                <h1 className="font-bold text-base lg:text-lg text-primary truncate">HSE Management</h1>
-                <p className="text-xs text-muted-foreground truncate">گروه صنعتی دانیال استیل</p>
+                <h1 className="font-bold text-lg text-sidebar-foreground truncate">HSE System</h1>
+                <p className="text-xs text-sidebar-foreground/70 truncate">دانیال استیل</p>
               </div>
             </div>
           </div>
 
-          {/* User Info */}
-          <div className="p-3 lg:p-4 border-b border-border bg-secondary/30">
-            <div className="flex items-center gap-2 lg:gap-3">
-              <div className="w-7 h-7 lg:w-8 lg:h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-3 h-3 lg:w-4 lg:h-4 text-primary-foreground" />
+          {/* User Info with enhanced design */}
+          <div className="p-4 border-b border-sidebar-border/30 bg-sidebar-accent/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-hse-info to-primary rounded-full flex items-center justify-center shadow-medium">
+                <User className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-xs lg:text-sm truncate">{currentUser?.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{currentUser?.role}</p>
+                <p className="font-semibold text-sm text-sidebar-foreground truncate">{currentUser?.name}</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">{currentUser?.role}</p>
               </div>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto" style={{maxHeight: 'calc(100vh - 250px)'}}>
+          {/* Enhanced Navigation */}
+          <nav className="p-4 space-y-1 overflow-y-auto" style={{maxHeight: 'calc(100vh - 250px)'}}>
             {getMenuItems().map((item) => {
               const Icon = item.icon;
+              const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 rounded-lg text-right transition-colors text-sm ${
-                    activeTab === item.id
-                      ? 'bg-primary text-primary-foreground shadow-soft'
-                      : 'hover:bg-secondary'
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-right transition-all text-sm group ${
+                    isActive
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-medium scale-[1.02]'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:scale-[1.01]'
                   }`}
                 >
-                  <Icon className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                  <span className="text-xs lg:text-sm font-medium truncate">{item.label}</span>
+                  <div className={`p-1.5 rounded-lg transition-all ${
+                    isActive 
+                      ? 'bg-white/20' 
+                      : 'bg-sidebar-accent/50 group-hover:bg-sidebar-accent'
+                  }`}>
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                  </div>
+                  <span className="text-sm font-medium truncate">{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Logout */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 border-t border-border bg-card">
+          {/* Enhanced Logout */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-sidebar-border/30 bg-sidebar-background/90 backdrop-blur-sm">
             <Button
               onClick={handleLogout}
-              variant="outline"
-              className="w-full justify-start gap-2 lg:gap-3 text-xs lg:text-sm"
-              size="sm"
+              variant="ghost"
+              className="w-full justify-start gap-3 text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-all hover:scale-[1.01]"
             >
-              <LogOut className="w-3 h-3 lg:w-4 lg:h-4" />
-              خروج از سیستم
+              <LogOut className="w-4 h-4" />
+              {t('common.logout')}
             </Button>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 lg:mr-64 w-full">
-          {/* Header Bar */}
-          <div className="bg-card border-b border-border p-3 sm:p-4 shadow-soft sticky top-0 z-20">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          {/* Enhanced Header Bar */}
+          <div className="bg-card/95 backdrop-blur-md border-b border-border/50 p-4 shadow-soft sticky top-0 z-20">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
                 {/* منوی موبایل */}
                 <Button 
                   variant="outline" 
                   size="icon"
-                  className="lg:hidden h-8 w-8 flex-shrink-0"
+                  className="lg:hidden h-9 w-9 flex-shrink-0 hover:scale-105 transition-transform"
                   onClick={() => {
                     const sidebar = document.getElementById('mobile-sidebar');
                     if (sidebar) sidebar.classList.remove('hidden');
@@ -1066,21 +1110,27 @@ const HSEManagementPanel = () => {
                   <Settings className="w-4 h-4" />
                 </Button>
                 
-                <h2 className="text-base sm:text-xl font-bold text-primary truncate">
-                  {getMenuItems().find(item => item.id === activeTab)?.label || 'داشبورد'}
-                </h2>
-                <Badge variant="outline" className="text-xs hidden sm:inline-flex">
-                  نسخه 2.0
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden lg:inline">{getTodayPersian()}</span>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
+                    {getMenuItems().find(item => item.id === activeTab)?.label || t('nav.dashboard')}
+                  </h2>
+                  <Badge className="bg-gradient-info text-white hidden sm:inline-flex border-0 shadow-soft">
+                    v2.0
+                  </Badge>
                 </div>
-                <Button size="sm" variant="outline" className="h-8 text-xs sm:text-sm">
-                  <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline mr-2">اعلانات</span>
+              </div>
+              
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <span>{getTodayPersian()}</span>
+                </div>
+                
+                <ThemeLanguageToggle />
+                
+                <Button size="sm" variant="outline" className="h-9 hover:shadow-medium transition-all hover:scale-105">
+                  <Bell className="w-4 h-4" />
+                  <span className="hidden sm:inline mr-2">{t('common.notifications') || 'اعلانات'}</span>
                 </Button>
               </div>
             </div>
