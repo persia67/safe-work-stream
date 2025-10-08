@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +45,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
     theme: 'system'
   });
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (currentUser) {
@@ -72,7 +74,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
     
     setLoading(true);
     try {
-      // Update the users list directly for mock implementation
+      // Update the users list
       if (setUsers && users) {
         const updatedUsers = users.map(user => 
           user.id === currentUser.id 
@@ -87,23 +89,24 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
         );
         setUsers(updatedUsers);
         
-        // Update currentUser object by finding updated user
+        // Update localStorage to persist changes
         const updatedCurrentUser = updatedUsers.find(u => u.id === currentUser.id);
         if (updatedCurrentUser) {
-          // This would normally be handled by parent component
-          // For now we'll update the data locally
+          localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
+          // Trigger a storage event to notify other components
+          window.dispatchEvent(new Event('userUpdated'));
         }
       }
 
       toast({
-        title: 'موفقیت',
-        description: 'اطلاعات پروفایل به‌روزرسانی شد'
+        title: t('settings.success'),
+        description: t('settings.profileUpdated')
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: 'خطا در به‌روزرسانی',
-        description: 'امکان به‌روزرسانی اطلاعات وجود ندارد',
+        title: 'Error',
+        description: 'Could not update profile information',
         variant: 'destructive'
       });
     } finally {
@@ -117,8 +120,8 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
     localStorage.setItem('hse_system_settings', JSON.stringify(systemSettings));
     
     toast({
-      title: 'موفقیت',
-      description: 'تنظیمات سیستم به‌روزرسانی شد'
+      title: t('settings.success'),
+      description: t('settings.settingsUpdated')
     });
   };
 
@@ -156,8 +159,8 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
       <div className="flex items-center gap-3">
         <Settings className="w-8 h-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold text-primary">تنظیمات</h1>
-          <p className="text-muted-foreground">مدیریت پروفایل و تنظیمات سیستم</p>
+          <h1 className="text-2xl font-bold text-primary">{t('settings.title')}</h1>
+          <p className="text-muted-foreground">{t('settings.profile')} & {t('settings.system')}</p>
         </div>
       </div>
 
@@ -167,22 +170,22 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
-              اطلاعات پروفایل
+              {t('settings.profile')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="name">نام و نام خانوادگی</Label>
+              <Label htmlFor="name">{t('settings.name')}</Label>
               <Input
                 id="name"
                 value={profileData.name}
                 onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                placeholder="نام خود را وارد کنید"
+                placeholder={t('settings.name')}
               />
             </div>
             
             <div>
-              <Label htmlFor="email">ایمیل</Label>
+              <Label htmlFor="email">{t('settings.email')}</Label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -197,7 +200,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
             </div>
             
             <div>
-              <Label htmlFor="phone">شماره تماس</Label>
+              <Label htmlFor="phone">{t('settings.phone')}</Label>
               <div className="relative">
                 <Phone className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -211,7 +214,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
             </div>
             
             <div>
-              <Label htmlFor="department">بخش</Label>
+              <Label htmlFor="department">{t('settings.department')}</Label>
               <div className="relative">
                 <Building className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Select
@@ -241,7 +244,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
               className="w-full gap-2"
             >
               <Save className="w-4 h-4" />
-              {loading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+              {loading ? t('settings.saving') : t('settings.saveChanges')}
             </Button>
           </CardContent>
         </Card>
@@ -251,7 +254,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="w-5 h-5" />
-              تنظیمات اعلانات
+              {t('settings.notifications')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -303,7 +306,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
               className="w-full gap-2"
             >
               <Save className="w-4 h-4" />
-              ذخیره تنظیمات اعلانات
+              {t('common.save')}
             </Button>
           </CardContent>
         </Card>
@@ -313,7 +316,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              تنظیمات سیستم
+              {t('settings.system')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -376,7 +379,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
               className="w-full gap-2"
             >
               <Save className="w-4 h-4" />
-              ذخیره تنظیمات سیستم
+              {t('common.save')}
             </Button>
           </CardContent>
         </Card>
@@ -386,7 +389,7 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              اطلاعات حساب
+              {t('settings.account')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

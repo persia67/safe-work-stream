@@ -42,6 +42,11 @@ const translations = {
     'common.notifications': 'اعلانات',
     'common.loading': 'در حال بارگذاری',
     'common.noData': 'داده‌ای موجود نیست',
+    'common.actions': 'عملیات',
+    'common.close': 'بستن',
+    'common.submit': 'ارسال',
+    'common.reset': 'بازنشانی',
+    'common.welcome': 'خوش آمدید',
     
     // Login
     'login.title': 'سیستم مدیریت HSE',
@@ -50,6 +55,7 @@ const translations = {
     'login.button': 'ورود به سیستم',
     'login.welcome': 'خوش آمدید',
     'login.testAccounts': 'حساب‌های آزمایشی',
+    'login.error': 'نام کاربری یا رمز عبور اشتباه است',
     
     // Dashboard
     'dashboard.title': 'داشبورد اصلی',
@@ -71,6 +77,10 @@ const translations = {
     'ergo.recommendations': 'توصیه‌ها',
     'ergo.assessment': 'ارزیابی',
     'ergo.workstation': 'ایستگاه کار',
+    'ergo.addNew': 'افزودن ارزیابی جدید',
+    'ergo.assessor': 'ارزیاب',
+    'ergo.shiftDuration': 'مدت شیفت',
+    'ergo.followUpDate': 'تاریخ پیگیری',
     
     // Risk Levels
     'risk.low': 'کم',
@@ -79,16 +89,45 @@ const translations = {
     'risk.critical': 'بحرانی',
     
     // Incidents
+    'incident.title': 'مدیریت حوادث',
     'incident.type': 'نوع حادثه',
     'incident.location': 'محل وقوع',
     'incident.severity': 'شدت',
     'incident.reporter': 'گزارش دهنده',
+    'incident.addNew': 'ثبت حادثه جدید',
     
     // Permits
+    'permit.title': 'مجوزهای کار',
     'permit.number': 'شماره مجوز',
     'permit.type': 'نوع مجوز',
     'permit.requester': 'درخواست کننده',
     'permit.validUntil': 'معتبر تا',
+    'permit.addNew': 'صدور مجوز جدید',
+    
+    // Settings
+    'settings.title': 'تنظیمات',
+    'settings.profile': 'اطلاعات پروفایل',
+    'settings.notifications': 'تنظیمات اعلانات',
+    'settings.system': 'تنظیمات سیستم',
+    'settings.account': 'اطلاعات حساب',
+    'settings.name': 'نام و نام خانوادگی',
+    'settings.email': 'ایمیل',
+    'settings.phone': 'شماره تماس',
+    'settings.department': 'بخش',
+    'settings.saveChanges': 'ذخیره تغییرات',
+    'settings.saving': 'در حال ذخیره...',
+    'settings.success': 'موفقیت',
+    'settings.profileUpdated': 'اطلاعات پروفایل به‌روزرسانی شد',
+    'settings.settingsUpdated': 'تنظیمات به‌روزرسانی شد',
+    
+    // Roles
+    'role.developer': 'توسعه دهنده',
+    'role.admin': 'مدیر سیستم',
+    'role.senior_manager': 'مدیر ارشد',
+    'role.supervisor': 'سرپرست',
+    'role.safety_officer': 'افسر ایمنی',
+    'role.medical_officer': 'افسر پزشکی',
+    'role.viewer': 'بازدیدکننده',
   },
   en: {
     // Navigation
@@ -123,6 +162,11 @@ const translations = {
     'common.notifications': 'Notifications',
     'common.loading': 'Loading',
     'common.noData': 'No Data Available',
+    'common.actions': 'Actions',
+    'common.close': 'Close',
+    'common.submit': 'Submit',
+    'common.reset': 'Reset',
+    'common.welcome': 'Welcome',
     
     // Login
     'login.title': 'HSE Management System',
@@ -131,6 +175,7 @@ const translations = {
     'login.button': 'Login',
     'login.welcome': 'Welcome',
     'login.testAccounts': 'Test Accounts',
+    'login.error': 'Invalid username or password',
     
     // Dashboard
     'dashboard.title': 'Main Dashboard',
@@ -152,6 +197,10 @@ const translations = {
     'ergo.recommendations': 'Recommendations',
     'ergo.assessment': 'Assessment',
     'ergo.workstation': 'Workstation',
+    'ergo.addNew': 'Add New Assessment',
+    'ergo.assessor': 'Assessor',
+    'ergo.shiftDuration': 'Shift Duration',
+    'ergo.followUpDate': 'Follow-up Date',
     
     // Risk Levels
     'risk.low': 'Low',
@@ -160,16 +209,45 @@ const translations = {
     'risk.critical': 'Critical',
     
     // Incidents
+    'incident.title': 'Incident Management',
     'incident.type': 'Incident Type',
     'incident.location': 'Location',
     'incident.severity': 'Severity',
     'incident.reporter': 'Reporter',
+    'incident.addNew': 'Report New Incident',
     
     // Permits
+    'permit.title': 'Work Permits',
     'permit.number': 'Permit Number',
     'permit.type': 'Permit Type',
     'permit.requester': 'Requester',
     'permit.validUntil': 'Valid Until',
+    'permit.addNew': 'Issue New Permit',
+    
+    // Settings
+    'settings.title': 'Settings',
+    'settings.profile': 'Profile Information',
+    'settings.notifications': 'Notification Settings',
+    'settings.system': 'System Settings',
+    'settings.account': 'Account Information',
+    'settings.name': 'Full Name',
+    'settings.email': 'Email',
+    'settings.phone': 'Phone Number',
+    'settings.department': 'Department',
+    'settings.saveChanges': 'Save Changes',
+    'settings.saving': 'Saving...',
+    'settings.success': 'Success',
+    'settings.profileUpdated': 'Profile information updated',
+    'settings.settingsUpdated': 'Settings updated',
+    
+    // Roles
+    'role.developer': 'Developer',
+    'role.admin': 'Administrator',
+    'role.senior_manager': 'Senior Manager',
+    'role.supervisor': 'Supervisor',
+    'role.safety_officer': 'Safety Officer',
+    'role.medical_officer': 'Medical Officer',
+    'role.viewer': 'Viewer',
   }
 };
 
