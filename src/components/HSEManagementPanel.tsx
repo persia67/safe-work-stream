@@ -328,48 +328,9 @@ const HSEManagementPanel = () => {
     }
   ]);
 
-  // ورود به سیستم
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setLoginError('');
-    
-    // شبیه‌سازی تأخیر شبکه
-    setTimeout(() => {
-      const user = users.find(u => 
-        u.username === loginForm.username &&
-        u.password === loginForm.password &&
-        u.active
-      );
-      
-      if (user) {
-        // بروزرسانی زمان آخرین ورود
-        setUsers(prev => prev.map(u => 
-          u.id === user.id ? {...u, lastLogin: getTodayPersian('jYYYY/jMM/jDD HH:mm')} : u
-        ));
-        setCurrentUser(user);
-        setIsLoggedIn(true);
-        setLoginForm({ username: '', password: '' });
-        toast({
-          title: "ورود موفق",
-          description: `خوش آمدید ${user.name}`,
-        });
-      } else {
-        setLoginError('نام کاربری یا رمز عبور اشتباه است یا حساب غیرفعال می‌باشد');
-      }
-      setLoading(false);
-    }, 1000);
-  };
-
   // خروج از سیستم
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setCurrentUser(null);
-    setActiveTab('dashboard');
-    setLoginForm({ username: '', password: '' });
-    setLoginError('');
-    setShowModal(false);
-    setModalData({});
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast({
       title: "خروج از سیستم",
       description: "با موفقیت خارج شدید",
@@ -871,7 +832,6 @@ const HSEManagementPanel = () => {
         lastLogin: 'هرگز',
         active: true
       };
-      setUsers(prev => [...prev, newUser]);
       toast({
         title: "کاربر جدید ایجاد شد",
         description: `کاربر ${newUser.name} اضافه شد`,
@@ -885,7 +845,6 @@ const HSEManagementPanel = () => {
   const handleDelete = (type, id) => {
     if (type === 'incident') setIncidents(prev => prev.filter(item => item.id !== id));
     if (type === 'permit') setWorkPermits(prev => prev.filter(item => item.id !== id));
-    if (type === 'user') setUsers(prev => prev.filter(item => item.id !== id));
     if (type === 'risk') setRiskAssessments(prev => prev.filter(item => item.id !== id));
     if (type === 'ergonomic') setErgonomicAssessments(prev => prev.filter(item => item.id !== id));
     
@@ -912,105 +871,6 @@ const HSEManagementPanel = () => {
     });
   };
 
-  // رندر صفحه ورود
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4wNSIvPjwvZz48L3N2Zz4=')] opacity-40" />
-        
-        <div className="absolute top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-hse-info/10 rounded-full blur-3xl animate-pulse delay-700" />
-        
-        <Card className="w-full max-w-md shadow-large relative z-10 backdrop-blur-sm bg-card/95 border-primary/20">
-          <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2">
-            <ThemeLanguageToggle />
-          </div>
-          
-          <CardHeader className="text-center space-y-4 pt-12">
-            <div className="mx-auto w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Shield className="w-10 h-10 text-primary-foreground relative z-10" />
-              <Sparkles className="w-4 h-4 text-primary-foreground/70 absolute top-2 right-2 animate-pulse" />
-            </div>
-            <div>
-              <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                {t('login.title')}
-              </CardTitle>
-              <CardDescription className="text-base mt-2">گروه صنعتی دانیال استیل</CardDescription>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">{t('login.username')}</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder={t('login.username')}
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
-                  className="text-right transition-all focus:shadow-soft"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">{t('login.password')}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={t('login.password')}
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                  className="text-right transition-all focus:shadow-soft"
-                  required
-                />
-              </div>
-              {loginError && (
-                <div className="p-3 bg-hse-danger/10 border border-hse-danger/20 rounded-lg backdrop-blur-sm">
-                  <p className="text-sm text-hse-danger text-right">{loginError}</p>
-                </div>
-              )}
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-primary hover:shadow-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    در حال ورود...
-                  </span>
-                ) : t('login.button')}
-              </Button>
-            </form>
-            
-            <div className="mt-6 p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-border/50 backdrop-blur-sm">
-              <h4 className="font-semibold text-sm mb-3 text-right flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                حساب‌های آزمایشی:
-              </h4>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
-                  <span>admin / admin123</span>
-                  <Badge variant="secondary" className="text-xs">مدیر</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
-                  <span>hse_eng / hse123</span>
-                  <Badge variant="secondary" className="text-xs">مهندس HSE</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
-                  <span>safety1 / safe123</span>
-                  <Badge variant="secondary" className="text-xs">افسر ایمنی</Badge>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // رندر اصلی برنامه
   return (
@@ -1176,13 +1036,9 @@ const HSEManagementPanel = () => {
               <EnhancedRiskAssessmentContent />
             )}
             {activeTab === 'users' && (
-              <UsersContent 
-                users={users}
-                openModal={openModal}
-                handleDelete={handleDelete}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-              />
+              <div className="text-center p-8">
+                <p className="text-muted-foreground">{t('common.comingSoon')}</p>
+              </div>
             )}
             {activeTab === 'analytics' && (
               <AnalyticsContent 
@@ -1210,8 +1066,6 @@ const HSEManagementPanel = () => {
             {activeTab === 'settings' && (
               <EditableSettingsContent 
                 currentUser={currentUser}
-                users={users}
-                setUsers={setUsers}
               />
             )}
           </div>

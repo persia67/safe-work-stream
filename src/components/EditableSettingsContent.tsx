@@ -16,14 +16,10 @@ import { formatPersianDate } from '@/lib/dateUtils';
 
 interface EditableSettingsContentProps {
   currentUser: any;
-  users: any[];
-  setUsers: (users: any[]) => void;
 }
 
 const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({ 
-  currentUser, 
-  users, 
-  setUsers 
+  currentUser
 }) => {
   const [profileData, setProfileData] = useState({
     name: '',
@@ -70,33 +66,22 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
   };
 
   const updateProfile = async () => {
-    if (!currentUser) return;
+    if (!currentUser?.id) return;
     
     setLoading(true);
     try {
-      // Update the users list
-      if (setUsers && users) {
-        const updatedUsers = users.map(user => 
-          user.id === currentUser.id 
-            ? { 
-                ...user, 
-                name: profileData.name, 
-                email: profileData.email, 
-                phone: profileData.phone, 
-                department: profileData.department 
-              }
-            : user
-        );
-        setUsers(updatedUsers);
-        
-        // Update localStorage to persist changes
-        const updatedCurrentUser = updatedUsers.find(u => u.id === currentUser.id);
-        if (updatedCurrentUser) {
-          localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
-          // Trigger a storage event to notify other components
-          window.dispatchEvent(new Event('userUpdated'));
-        }
-      }
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          name: profileData.name,
+          email: profileData.email,
+          phone: profileData.phone,
+          department: profileData.department,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', currentUser.id);
+
+      if (error) throw error;
 
       toast({
         title: t('settings.success'),
@@ -105,8 +90,8 @@ const EditableSettingsContent: React.FC<EditableSettingsContentProps> = ({
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: 'Error',
-        description: 'Could not update profile information',
+        title: 'خطا',
+        description: 'امکان بروزرسانی پروفایل وجود ندارد',
         variant: 'destructive'
       });
     } finally {
