@@ -38,7 +38,8 @@ import {
   Thermometer,
   Mail,
   Phone,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import HealthExaminationsContent from './HealthExaminationsContent';
@@ -77,42 +78,93 @@ const HSEManagementPanel = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile and role from Supabase
+  // Fetch user profile and role from Supabase with auto-creation fallback
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error('خطا در دریافت کاربر:', userError);
+          setLoading(false);
+          return;
+        }
+
         // Fetch user profile
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
+
+        // If profile doesn't exist, create it
+        if (profileError || !profile) {
+          console.warn('پروفایل کاربر یافت نشد، در حال ایجاد...');
+          
+          const { error: createError } = await supabase
+            .from('user_profiles')
+            .insert({
+              user_id: user.id,
+              name: user.user_metadata?.name || user.email?.split('@')[0],
+              email: user.email,
+              department: 'General'
+            });
+
+          if (createError) {
+            console.error('خطا در ایجاد پروفایل:', createError);
+            toast({
+              title: 'خطا در ایجاد پروفایل',
+              description: 'لطفاً با مدیر سیستم تماس بگیرید',
+              variant: 'destructive'
+            });
+          }
+        }
 
         // Fetch user role
-        const { data: roles } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id);
 
-        const role = roles && roles.length > 0 ? roles[0].role : 'viewer';
-        
+        // If no role exists, assign default viewer role
+        let role = 'viewer';
+        if (!rolesError && roles && roles.length > 0) {
+          role = roles[0].role;
+        } else {
+          console.warn('نقش کاربر یافت نشد، در حال تخصیص نقش پیش‌فرض...');
+          
+          await supabase
+            .from('user_roles')
+            .insert({
+              user_id: user.id,
+              role: 'viewer'
+            });
+        }
+
         setCurrentUser({
           id: user.id,
           email: user.email,
           name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0],
-          department: profile?.department || 'N/A',
+          department: profile?.department || 'General',
           phone: profile?.phone || 'N/A',
           role: role
         });
         setUserRole(role);
+        
+      } catch (error) {
+        console.error('خطای غیرمنتظره:', error);
+        toast({
+          title: 'خطا در بارگذاری اطلاعات',
+          description: 'لطفاً صفحه را رفرش کنید',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchUserData();
-  }, []);
+  }, [toast]);
 
   // حوادث با جزئیات بیشتر
   const [incidents, setIncidents] = useState([
@@ -340,19 +392,20 @@ const HSEManagementPanel = () => {
 
   // منوهای کاربر بر اساس نقش
   const getMenuItems = () => {
-    if (!currentUser) return [];
+    // اگر کاربر یا نقش کاربر وجود ندارد، آرایه خالی برگردان
+    if (!currentUser || !currentUser.role) return [];
     
     const items = [
-      { id: 'dashboard', icon: Home, label: t('dashboard'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'incidents', icon: AlertTriangle, label: t('incidents'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'ergonomics', icon: Activity, label: t('ergonomics'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'permits', icon: FileText, label: t('permits'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'reports', icon: PenTool, label: t('reports'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'risk', icon: Shield, label: t('risk'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'health-examinations', icon: User, label: t('health_examinations'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer'] },
-      { id: 'safety-training', icon: Users, label: t('safety_training'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
-      { id: 'analytics', icon: BarChart3, label: t('analytics'), roles: ['admin', 'senior_manager'] },
-      { id: 'ai-insights', icon: Brain, label: t('ai_insights'), roles: ['admin', 'senior_manager'] },
+      { id: 'dashboard', icon: Home, label: t('dashboard'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer', 'viewer'] },
+      { id: 'incidents', icon: AlertTriangle, label: t('incidents'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'ergonomics', icon: Activity, label: t('ergonomics'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'permits', icon: FileText, label: t('permits'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'reports', icon: PenTool, label: t('reports'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'risk', icon: Shield, label: t('risk'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'health-examinations', icon: User, label: t('health_examinations'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'developer'] },
+      { id: 'safety-training', icon: Users, label: t('safety_training'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'analytics', icon: BarChart3, label: t('analytics'), roles: ['admin', 'senior_manager', 'developer'] },
+      { id: 'ai-insights', icon: Brain, label: t('ai_insights'), roles: ['admin', 'senior_manager', 'developer'] },
       { id: 'settings', icon: Settings, label: t('settings'), roles: ['admin', 'developer'] }
     ];
 
@@ -874,6 +927,26 @@ const HSEManagementPanel = () => {
 
 
   // رندر اصلی برنامه
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground text-lg">در حال بارگذاری اطلاعات کاربر...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <p className="text-lg font-semibold mb-2">خطا در بارگذاری اطلاعات</p>
+        <p className="text-muted-foreground mb-4 text-center">اطلاعات کاربری شما یافت نشد</p>
+        <Button onClick={() => window.location.reload()}>تلاش مجدد</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground w-full" dir="rtl">
       <div className="flex w-full min-h-screen">
