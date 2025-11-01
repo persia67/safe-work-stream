@@ -63,6 +63,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getTodayPersian } from '@/lib/dateUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+// HSE Management Panel - Main Application Component
 const HSEManagementPanel = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
