@@ -11,6 +11,15 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { messages, pageContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
@@ -72,8 +81,10 @@ ${pageContext ? `\n\nمحتوای صفحه فعلی کاربر:\n${pageContext}\
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
+    // Log detailed errors server-side only
     console.error("Chat error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "خطای ناشناخته" }), {
+    // Return generic error to client
+    return new Response(JSON.stringify({ error: "خطا در پردازش درخواست" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

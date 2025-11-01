@@ -66,57 +66,52 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const HSEManagementPanel = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [loginError, setLoginError] = useState('');
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string>('viewer');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [modalData, setModalData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // کاربران سیستم با اطلاعات کامل‌تر
-  const [users, setUsers] = useState([
-    { 
-      id: 1, 
-      username: 'admin', 
-      password: 'admin123', 
-      role: 'manager', 
-      name: 'مدیر سیستم', 
-      email: 'admin@danialsteel.com',
-      phone: '09123456789',
-      department: 'مدیریت',
-      lastLogin: '2025-01-29 09:30',
-      active: true 
-    },
-    { 
-      id: 2, 
-      username: 'hse_eng', 
-      password: 'hse123', 
-      role: 'hse_engineer', 
-      name: 'مهندس بهداشت حرفه‌ای', 
-      email: 'hse@danialsteel.com',
-      phone: '09123456788',
-      department: 'HSE',
-      lastLogin: '2025-01-29 08:15',
-      active: true 
-    },
-    { 
-      id: 3, 
-      username: 'safety1', 
-      password: 'safe123', 
-      role: 'safety_officer', 
-      name: 'افسر ایمنی 1', 
-      email: 'safety1@danialsteel.com',
-      phone: '09123456787',
-      department: 'HSE',
-      lastLogin: '2025-01-29 07:45',
-      active: true 
-    }
-  ]);
+  // Fetch user profile and role from Supabase
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Fetch user profile
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        // Fetch user role
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+
+        const role = roles && roles.length > 0 ? roles[0].role : 'viewer';
+        
+        setCurrentUser({
+          id: user.id,
+          email: user.email,
+          name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0],
+          department: profile?.department || 'N/A',
+          phone: profile?.phone || 'N/A',
+          role: role
+        });
+        setUserRole(role);
+      }
+      setLoading(false);
+    };
+
+    fetchUserData();
+  }, []);
 
   // حوادث با جزئیات بیشتر
   const [incidents, setIncidents] = useState([
@@ -386,17 +381,17 @@ const HSEManagementPanel = () => {
     if (!currentUser) return [];
     
     const items = [
-      { id: 'dashboard', icon: Home, label: 'داشبورد اصلی', roles: ['manager', 'hse_engineer', 'safety_officer'] },
-      { id: 'incidents', icon: AlertTriangle, label: 'مدیریت حوادث', roles: ['manager', 'hse_engineer', 'safety_officer'] },
-      { id: 'ergonomics', icon: Activity, label: 'ارزیابی ارگونومی', roles: ['manager', 'hse_engineer'] },
-      { id: 'permits', icon: FileText, label: 'مجوزهای کار', roles: ['manager', 'hse_engineer', 'safety_officer'] },
-      { id: 'reports', icon: PenTool, label: 'گزارش‌های روزانه', roles: ['safety_officer', 'hse_engineer', 'manager'] },
-      { id: 'risk', icon: Shield, label: 'ارزیابی ریسک', roles: ['manager', 'hse_engineer', 'safety_officer'] },
-      { id: 'health-examinations', icon: User, label: 'معاینات طب کار', roles: ['manager', 'hse_engineer', 'safety_officer'] },
-      { id: 'safety-training', icon: Users, label: 'آموزش‌های ایمنی', roles: ['manager', 'hse_engineer', 'safety_officer'] },
-      { id: 'analytics', icon: BarChart3, label: 'تحلیل و آمار', roles: ['manager', 'hse_engineer'] },
-      { id: 'ai-insights', icon: Brain, label: 'تحلیل هوش مصنوعی', roles: ['manager', 'hse_engineer'] },
-      { id: 'settings', icon: Settings, label: 'تنظیمات', roles: ['manager'] }
+      { id: 'dashboard', icon: Home, label: t('dashboard'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'incidents', icon: AlertTriangle, label: t('incidents'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'ergonomics', icon: Activity, label: t('ergonomics'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'permits', icon: FileText, label: t('permits'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'reports', icon: PenTool, label: t('reports'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'risk', icon: Shield, label: t('risk'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'health-examinations', icon: User, label: t('health_examinations'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer'] },
+      { id: 'safety-training', icon: Users, label: t('safety_training'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer'] },
+      { id: 'analytics', icon: BarChart3, label: t('analytics'), roles: ['admin', 'senior_manager'] },
+      { id: 'ai-insights', icon: Brain, label: t('ai_insights'), roles: ['admin', 'senior_manager'] },
+      { id: 'settings', icon: Settings, label: t('settings'), roles: ['admin', 'developer'] }
     ];
 
     return items.filter(item => item.roles.includes(currentUser.role));

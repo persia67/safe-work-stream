@@ -373,6 +373,42 @@ export type Database = {
           },
         ]
       }
+      role_audit_log: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string
+          id: string
+          ip_address: unknown
+          role_changed: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by: string
+          id?: string
+          ip_address?: unknown
+          role_changed: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          ip_address?: unknown
+          role_changed?: Database["public"]["Enums"]["app_role"]
+          target_user_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       safety_trainings: {
         Row: {
           ai_analysis: Json | null
@@ -588,10 +624,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

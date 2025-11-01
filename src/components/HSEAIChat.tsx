@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -38,10 +39,24 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
     setIsLoading(true);
 
     try {
+      // Get the session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "خطا",
+          description: "لطفا ابتدا وارد سیستم شوید",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ 
           messages: newMessages,
@@ -114,7 +129,7 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
 
       setIsLoading(false);
     } catch (error) {
-      console.error('Chat error:', error);
+      // Generic error message to user (don't expose details)
       toast({
         title: "خطا",
         description: "خطا در ارتباط با هوش مصنوعی",
