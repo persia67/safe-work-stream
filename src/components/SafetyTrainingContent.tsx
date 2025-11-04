@@ -180,7 +180,9 @@ export const SafetyTrainingContent = () => {
         status: formData.status || 'برنامه‌ریزی شده',
         attendance_count: formData.attendance_count || 0,
         pass_count: formData.pass_count || 0,
-        follow_up_required: formData.follow_up_required || false
+        effectiveness_score: formData.effectiveness_score || null,
+        follow_up_required: formData.follow_up_required || false,
+        ai_analysis: formData.ai_analysis || null
       };
 
       console.log('📦 Data to save:', dataToSave);
@@ -220,10 +222,21 @@ export const SafetyTrainingContent = () => {
       setDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error('💥 Error saving training:', error);
+      console.error('Error saving training:', error);
+      
+      let errorMessage = 'خطا در ذخیره اطلاعات';
+      
+      if (error?.code === '42501') {
+        errorMessage = 'شما مجوز ثبت آموزش ندارید. لطفاً ابتدا وارد سیستم شوید.';
+      } else if (error?.code === '23502') {
+        errorMessage = `فیلد الزامی خالی است: ${error.details || error.message}`;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "خطا در ذخیره",
-        description: error?.message || error?.hint || "خطا در ذخیره اطلاعات",
+        description: errorMessage,
         variant: "destructive"
       });
     }
