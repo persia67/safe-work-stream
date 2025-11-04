@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, FileText, Users, Clock, AlertTriangle, CheckCircle, Edit, Trash2, Brain } from 'lucide-react';
+import { PlusCircle, FileText, Users, Clock, AlertTriangle, CheckCircle, Edit, Trash2, Brain, BarChart3 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
+import { TrainingStatisticsChart } from './TrainingStatisticsChart';
 
 interface SafetyTraining {
   id?: string;
@@ -152,7 +153,7 @@ export const SafetyTrainingContent = () => {
   const handleSave = async () => {
     try {
       if (!formData.training_title || !formData.training_type || 
-          !formData.department || !formData.instructor_name) {
+          !formData.department || !formData.instructor_name || !formData.training_date) {
         toast({ 
           title: "خطا", 
           description: "لطفا تمام فیلدهای الزامی را پر کنید",
@@ -162,10 +163,22 @@ export const SafetyTrainingContent = () => {
       }
 
       const dataToSave = {
-        ...formData,
-        training_date: new Date().toISOString().split('T')[0],
-        participants: formData.participants.length > 0 ? formData.participants : [],
-        objectives: formData.objectives.length > 0 ? formData.objectives : []
+        training_title: formData.training_title.trim(),
+        training_type: formData.training_type,
+        department: formData.department,
+        instructor_name: formData.instructor_name.trim(),
+        training_date: formData.training_date,
+        duration_hours: formData.duration_hours || 2,
+        participants: formData.participants || [],
+        training_content: formData.training_content?.trim() || '',
+        objectives: formData.objectives || [],
+        assessment_method: formData.assessment_method || '',
+        pass_score: formData.pass_score || 70,
+        certificate_issued: formData.certificate_issued || false,
+        status: formData.status || 'برنامه‌ریزی شده',
+        attendance_count: formData.attendance_count || 0,
+        pass_count: formData.pass_count || 0,
+        follow_up_required: formData.follow_up_required || false
       };
 
       if (editingTraining) {
@@ -285,12 +298,31 @@ export const SafetyTrainingContent = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            آموزش‌های ایمنی و بهداشت
-          </CardTitle>
+      {/* نمایش آمار و نمودارها */}
+      {trainings.length > 0 && (
+        <Tabs defaultValue="list" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="list">
+              <FileText className="h-4 w-4 ml-2" />
+              لیست آموزش‌ها
+            </TabsTrigger>
+            <TabsTrigger value="statistics">
+              <BarChart3 className="h-4 w-4 ml-2" />
+              آمار و نمودارها
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="statistics" className="mt-6">
+            <TrainingStatisticsChart trainings={trainings} />
+          </TabsContent>
+
+          <TabsContent value="list">
+            <Card className="mt-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  آموزش‌های ایمنی و بهداشت
+                </CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => openDialog()}>
@@ -358,6 +390,14 @@ export const SafetyTrainingContent = () => {
                       value={formData.instructor_name}
                       onChange={(e) => setFormData({...formData, instructor_name: e.target.value})}
                       placeholder="نام مدرس را وارد کنید"
+                    />
+                  </div>
+                  <div>
+                    <Label>تاریخ آموزش*</Label>
+                    <Input
+                      type="date"
+                      value={formData.training_date}
+                      onChange={(e) => setFormData({...formData, training_date: e.target.value})}
                     />
                   </div>
                   <div>
@@ -582,6 +622,40 @@ export const SafetyTrainingContent = () => {
           </div>
         </CardContent>
       </Card>
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {/* اگر آموزشی وجود ندارد */}
+      {trainings.length === 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              آموزش‌های ایمنی و بهداشت
+            </CardTitle>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => openDialog()}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  آموزش جدید
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh]">
+                <DialogHeader>
+                  <DialogTitle>ثبت آموزش جدید</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[70vh] pr-4">
+                  <div className="text-center py-12">
+                    <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">هنوز آموزشی ثبت نشده است</p>
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+        </Card>
+      )}
     </div>
   );
 };
