@@ -152,6 +152,8 @@ export const SafetyTrainingContent = () => {
 
   const handleSave = async () => {
     try {
+      console.log('🔍 Starting save process...', formData);
+
       if (!formData.training_title || !formData.training_type || 
           !formData.department || !formData.instructor_name || !formData.training_date) {
         toast({ 
@@ -181,31 +183,47 @@ export const SafetyTrainingContent = () => {
         follow_up_required: formData.follow_up_required || false
       };
 
+      console.log('📦 Data to save:', dataToSave);
+
       if (editingTraining) {
-        const { error } = await supabase
+        console.log('✏️ Updating training...', editingTraining.id);
+        const { data, error } = await supabase
           .from('safety_trainings')
           .update(dataToSave)
-          .eq('id', editingTraining.id);
+          .eq('id', editingTraining.id)
+          .select();
 
-        if (error) throw error;
+        console.log('Update result:', { data, error });
+
+        if (error) {
+          console.error('❌ Update error:', error);
+          throw error;
+        }
         toast({ title: "موفق", description: "اطلاعات آموزش با موفقیت به‌روزرسانی شد" });
       } else {
-        const { error } = await supabase
+        console.log('➕ Inserting new training...');
+        const { data, error } = await supabase
           .from('safety_trainings')
-          .insert([dataToSave]);
+          .insert([dataToSave])
+          .select();
 
-        if (error) throw error;
+        console.log('Insert result:', { data, error });
+
+        if (error) {
+          console.error('❌ Insert error:', error);
+          throw error;
+        }
         toast({ title: "موفق", description: "آموزش جدید با موفقیت ثبت شد" });
       }
 
       await fetchTrainings();
       setDialogOpen(false);
       resetForm();
-    } catch (error) {
-      console.error('Error saving training:', error);
+    } catch (error: any) {
+      console.error('💥 Error saving training:', error);
       toast({
-        title: "خطا",
-        description: "خطا در ذخیره اطلاعات",
+        title: "خطا در ذخیره",
+        description: error?.message || error?.hint || "خطا در ذخیره اطلاعات",
         variant: "destructive"
       });
     }
