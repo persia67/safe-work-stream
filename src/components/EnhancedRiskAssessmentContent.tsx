@@ -188,10 +188,29 @@ export const EnhancedRiskAssessmentContent = () => {
   };
   const handleSave = async () => {
     try {
-      if (!formData.assessment_id || !formData.area || !formData.process_name || !formData.hazard) {
+      // Validate using Zod schema for security
+      const validationResult = riskAssessmentSchema.safeParse({
+        assessment_id: formData.assessment_id,
+        assessment_type: formData.assessment_type,
+        area: formData.area,
+        process_name: formData.process_name,
+        hazard: formData.hazard,
+        hazard_category: formData.hazard_category,
+        probability: formData.probability,
+        severity: formData.severity,
+        risk_level: formData.risk_level,
+        risk_score: calculateRiskScore(formData.probability, formData.severity),
+        existing_controls: formData.existing_controls || [],
+        additional_controls: formData.additional_controls,
+        review_date: new Date().toISOString().split('T')[0],
+        status: formData.status
+      });
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map(e => e.message).join(', ');
         toast({
-          title: "خطا",
-          description: "لطفا تمام فیلدهای الزامی را پر کنید",
+          title: "خطای اعتبارسنجی",
+          description: errors,
           variant: "destructive"
         });
         return;
@@ -201,25 +220,24 @@ export const EnhancedRiskAssessmentContent = () => {
       const calculatedScore = calculateRiskScore(formData.probability, formData.severity);
       const calculatedLevel = getRiskLevel(calculatedScore);
       const dataToSave = {
-        ...formData,
-        review_date: new Date().toISOString().split('T')[0],
+        ...validationResult.data,
         risk_score: calculatedScore,
-        risk_level: calculatedLevel,
-        existing_controls: formData.existing_controls.length > 0 ? formData.existing_controls : []
+        risk_level: calculatedLevel
       };
       if (editingAssessment) {
-        const {
-          error
-        } = await supabase.from('risk_assessments').update(dataToSave).eq('id', editingAssessment.id);
+        const { error } = await supabase
+          .from('risk_assessments')
+          .update(dataToSave as any)
+          .eq('id', editingAssessment.id);
         if (error) throw error;
         toast({
           title: "موفق",
           description: "اطلاعات ارزیابی ریسک با موفقیت به‌روزرسانی شد"
         });
       } else {
-        const {
-          error
-        } = await supabase.from('risk_assessments').insert([dataToSave]);
+        const { error } = await supabase
+          .from('risk_assessments')
+          .insert([dataToSave as any]);
         if (error) throw error;
         toast({
           title: "موفق",

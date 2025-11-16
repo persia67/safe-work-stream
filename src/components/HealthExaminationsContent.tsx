@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { healthExaminationSchema } from '@/lib/validation';
 import moment from 'moment-jalaali';
 import DatePicker from 'react-persian-calendar-date-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,7 +67,8 @@ const HealthExaminationsContent = () => {
     exposure_risks: [],
     health_recommendations: [],
     fitness_for_work: 'مناسب',
-    next_examination_date: ''
+    next_examination_date: '',
+    status: 'فعال'
   });
 
   useEffect(() => {
@@ -96,21 +98,36 @@ const HealthExaminationsContent = () => {
 
   const handleSave = async () => {
     try {
-      // Validate required fields
-      if (!formData.employee_name || !formData.employee_id || 
-          !formData.department || !formData.position ||
-          !formData.examiner_name) {
+      // Validate using Zod schema for security
+      const validationResult = healthExaminationSchema.safeParse({
+        employee_name: formData.employee_name,
+        employee_id: formData.employee_id,
+        department: formData.department,
+        position: formData.position,
+        examination_date: formData.examination_date || new Date().toISOString().split('T')[0],
+        examination_type: formData.examination_type,
+        examiner_name: formData.examiner_name,
+        hearing_test_result: formData.hearing_test_result,
+        vision_test_result: formData.vision_test_result,
+        blood_pressure: formData.blood_pressure,
+        respiratory_function: formData.respiratory_function,
+        musculoskeletal_assessment: formData.musculoskeletal_assessment,
+        fitness_for_work: formData.fitness_for_work,
+        status: formData.status
+      });
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map(e => e.message).join(', ');
         toast({ 
-          title: "خطا", 
-          description: "لطفا تمام فیلدهای الزامی را پر کنید",
+          title: "خطای اعتبارسنجی", 
+          description: errors,
           variant: "destructive" 
         });
         return;
       }
 
       const dataToSave = {
-        ...formData,
-        examination_date: new Date().toISOString().split('T')[0],
+        ...validationResult.data,
         exposure_risks: formData.exposure_risks.length > 0 ? formData.exposure_risks : null,
         health_recommendations: formData.health_recommendations.length > 0 ? formData.health_recommendations : null,
         next_examination_date: formData.next_examination_date || null
@@ -119,13 +136,13 @@ const HealthExaminationsContent = () => {
       if (editingExam) {
         const { error } = await supabase
           .from('health_examinations')
-          .update(dataToSave)
+          .update(dataToSave as any)
           .eq('id', editingExam.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('health_examinations')
-          .insert(dataToSave);
+          .insert([dataToSave as any]);
         if (error) throw error;
       }
 
@@ -164,7 +181,8 @@ const HealthExaminationsContent = () => {
       exposure_risks: [],
       health_recommendations: [],
       fitness_for_work: 'مناسب',
-      next_examination_date: ''
+      next_examination_date: '',
+      status: 'فعال'
     });
     setEditingExam(null);
   };
@@ -789,7 +807,8 @@ const HealthExaminationsContent = () => {
                               exposure_risks: exam.exposure_risks || [],
                               health_recommendations: exam.health_recommendations || [],
                               fitness_for_work: exam.fitness_for_work,
-                              next_examination_date: exam.next_examination_date || ''
+                              next_examination_date: exam.next_examination_date || '',
+                              status: exam.status || 'فعال'
                             });
                             setEditingExam(exam);
                             setShowModal(true);
