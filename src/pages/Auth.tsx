@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import { ThemeLanguageToggle } from '@/components/ThemeLanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const authSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }).max(255),
@@ -18,6 +20,7 @@ const authSchema = z.object({
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { language } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -26,6 +29,29 @@ const Auth = () => {
     name: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const t = {
+    loginTitle: language === 'fa' ? 'ورود به سیستم HSE' : 'Login to HSE Management',
+    signupTitle: language === 'fa' ? 'ایجاد حساب کاربری' : 'Create HSE Account',
+    loginDesc: language === 'fa' ? 'اطلاعات خود را وارد کنید' : 'Enter your credentials to access the system',
+    signupDesc: language === 'fa' ? 'برای شروع ثبت‌نام کنید' : 'Register for a new account to get started',
+    fullName: language === 'fa' ? 'نام کامل' : 'Full Name',
+    email: language === 'fa' ? 'ایمیل' : 'Email',
+    password: language === 'fa' ? 'رمز عبور' : 'Password',
+    loginBtn: language === 'fa' ? 'ورود' : 'Login',
+    signupBtn: language === 'fa' ? 'ثبت‌نام' : 'Sign up',
+    noAccount: language === 'fa' ? 'حساب کاربری ندارید؟ ثبت‌نام کنید' : "Don't have an account? Sign up",
+    haveAccount: language === 'fa' ? 'حساب کاربری دارید؟ وارد شوید' : 'Already have an account? Login',
+    welcomeBack: language === 'fa' ? 'خوش آمدید!' : 'Welcome back!',
+    loginSuccess: language === 'fa' ? 'با موفقیت وارد شدید' : 'Successfully logged in',
+    accountCreated: language === 'fa' ? 'حساب ایجاد شد' : 'Account Created',
+    checkEmail: language === 'fa' ? 'لطفاً ایمیل خود را بررسی کنید' : 'Please check your email to confirm your account.',
+    authFailed: language === 'fa' ? 'خطا در ورود' : 'Authentication Failed',
+    invalidCreds: language === 'fa' ? 'ایمیل یا رمز عبور نادرست' : 'Invalid email or password',
+    regFailed: language === 'fa' ? 'خطا در ثبت‌نام' : 'Registration Failed',
+    emailExists: language === 'fa' ? 'این ایمیل قبلاً ثبت شده است' : 'This email is already registered. Please login instead.',
+    error: language === 'fa' ? 'خطا' : 'Error',
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -77,8 +103,8 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast({
-              title: 'Authentication Failed',
-              description: 'Invalid email or password',
+              title: t.authFailed,
+              description: t.invalidCreds,
               variant: 'destructive',
             });
           } else {
@@ -89,8 +115,8 @@ const Auth = () => {
 
         if (data.session) {
           toast({
-            title: 'Welcome back!',
-            description: 'Successfully logged in',
+            title: t.welcomeBack,
+            description: t.loginSuccess,
           });
           navigate('/');
         }
@@ -109,8 +135,8 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('already registered')) {
             toast({
-              title: 'Registration Failed',
-              description: 'This email is already registered. Please login instead.',
+              title: t.regFailed,
+              description: t.emailExists,
               variant: 'destructive',
             });
           } else {
@@ -121,8 +147,8 @@ const Auth = () => {
 
         if (data.user) {
           toast({
-            title: 'Account Created',
-            description: 'Please check your email to confirm your account.',
+            title: t.accountCreated,
+            description: t.checkEmail,
           });
           setIsLogin(true);
           setFormData({ email: '', password: '', name: '' });
@@ -130,8 +156,8 @@ const Auth = () => {
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'An unexpected error occurred',
+        title: t.error,
+        description: error.message || (language === 'fa' ? 'خطای غیرمنتظره' : 'An unexpected error occurred'),
         variant: 'destructive',
       });
     } finally {
@@ -141,6 +167,9 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/50 to-background p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeLanguageToggle />
+      </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
@@ -149,24 +178,21 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {isLogin ? 'Login to HSE Management' : 'Create HSE Account'}
+            {isLogin ? t.loginTitle : t.signupTitle}
           </CardTitle>
           <CardDescription>
-            {isLogin 
-              ? 'Enter your credentials to access the system'
-              : 'Register for a new account to get started'
-            }
+            {isLogin ? t.loginDesc : t.signupDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t.fullName}</Label>
                 <Input
                   id="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={language === 'fa' ? 'نام و نام خانوادگی' : 'John Doe'}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   disabled={loading}
@@ -179,11 +205,11 @@ const Auth = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.email}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="name@company.com"
+                placeholder={language === 'fa' ? 'name@company.com' : 'name@company.com'}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 disabled={loading}
@@ -196,7 +222,7 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.password}</Label>
               <Input
                 id="password"
                 type="password"
@@ -216,10 +242,10 @@ const Auth = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Please wait...
+                  {language === 'fa' ? 'لطفاً صبر کنید...' : 'Please wait...'}
                 </>
               ) : (
-                <>{isLogin ? 'Login' : 'Sign Up'}</>
+                <>{isLogin ? t.loginBtn : t.signupBtn}</>
               )}
             </Button>
 
@@ -234,10 +260,7 @@ const Auth = () => {
                 className="text-primary hover:underline"
                 disabled={loading}
               >
-                {isLogin 
-                  ? "Don't have an account? Sign up" 
-                  : 'Already have an account? Login'
-                }
+                {isLogin ? t.noAccount : t.haveAccount}
               </button>
             </div>
           </form>
