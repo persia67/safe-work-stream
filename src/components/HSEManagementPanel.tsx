@@ -409,6 +409,9 @@ const HSEManagementPanel = () => {
       { id: 'settings', icon: Settings, label: t('settings'), roles: ['admin', 'developer'] }
     ];
 
+    // SECURITY NOTE: This is client-side filtering for UX only, NOT a security boundary.
+    // Actual authorization MUST be enforced server-side via RLS policies and Edge Functions.
+    // Attackers can bypass this filter via DevTools, but proper RLS policies prevent unauthorized data access.
     return items.filter(item => item.roles.includes(currentUser.role));
   };
 

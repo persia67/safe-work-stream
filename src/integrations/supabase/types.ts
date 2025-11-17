@@ -621,9 +621,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      health_examinations_limited: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          employee_id: string | null
+          employee_name: string | null
+          examination_date: string | null
+          examination_type: string | null
+          examiner_name: string | null
+          fitness_for_work: string | null
+          id: string | null
+          next_examination_date: string | null
+          position: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
+          examination_date?: string | null
+          examination_type?: string | null
+          examiner_name?: string | null
+          fitness_for_work?: string | null
+          id?: string | null
+          next_examination_date?: string | null
+          position?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
+          examination_date?: string | null
+          examination_type?: string | null
+          examiner_name?: string | null
+          fitness_for_work?: string | null
+          id?: string | null
+          next_examination_date?: string | null
+          position?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      can_view_limited_health_data: { Args: never; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
       has_role: {
         Args: {
