@@ -22,6 +22,7 @@ const translations = {
     'nav.analytics': 'تحلیل و آمار',
     'nav.ai': 'تحلیل هوش مصنوعی',
     'nav.settings': 'تنظیمات',
+    'user_management': 'مدیریت کاربران',
     
     // Common
     'common.add': 'افزودن',
@@ -142,6 +143,7 @@ const translations = {
     'nav.analytics': 'Analytics',
     'nav.ai': 'AI Insights',
     'nav.settings': 'Settings',
+    'user_management': 'User Management',
     
     // Common
     'common.add': 'Add',
