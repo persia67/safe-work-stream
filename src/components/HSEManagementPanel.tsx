@@ -48,6 +48,7 @@ import { SafetyTrainingContent } from './SafetyTrainingContent';
 import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
 import { HSEAIChat } from './HSEAIChat';
 import { ThemeLanguageToggle } from './ThemeLanguageToggle';
+import UserManagementContent from './UserManagementContent';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -404,6 +405,7 @@ const HSEManagementPanel = () => {
       { id: 'risk', icon: Shield, label: t('risk'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
       { id: 'health-examinations', icon: User, label: t('health_examinations'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'developer'] },
       { id: 'safety-training', icon: Users, label: t('safety_training'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
+      { id: 'user-management', icon: UserPlus, label: t('user_management'), roles: ['admin', 'developer'] },
       { id: 'analytics', icon: BarChart3, label: t('analytics'), roles: ['admin', 'senior_manager', 'developer'] },
       { id: 'ai-insights', icon: Brain, label: t('ai_insights'), roles: ['admin', 'senior_manager', 'developer'] },
       { id: 'settings', icon: Settings, label: t('settings'), roles: ['admin', 'developer'] }
@@ -1139,6 +1141,9 @@ const HSEManagementPanel = () => {
             )}
             {activeTab === 'safety-training' && (
               <SafetyTrainingContent />
+            )}
+            {activeTab === 'user-management' && (
+              <UserManagementContent />
             )}
             {activeTab === 'settings' && (
               <EditableSettingsContent 
