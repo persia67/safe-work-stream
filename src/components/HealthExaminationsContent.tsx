@@ -48,6 +48,7 @@ const HealthExaminationsContent = () => {
   const [editingExam, setEditingExam] = useState<HealthExamination | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  const [isMedicalOfficer, setIsMedicalOfficer] = useState(false);
   const { toast } = useToast();
 
   // Form state
@@ -77,10 +78,39 @@ const HealthExaminationsContent = () => {
 
   const fetchExaminations = async () => {
     try {
-      const { data, error } = await supabase
-        .from('health_examinations')
-        .select('*')
-        .order('examination_date', { ascending: false });
+      // Security: Get user role to determine data access level
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      const userRole = roleData?.role || 'viewer';
+      const medicalOfficer = userRole === 'medical_officer';
+      setIsMedicalOfficer(medicalOfficer);
+
+      // Medical officers see full data from health_examinations table
+      // Other roles see limited view without sensitive health data
+      let data, error;
+      
+      if (medicalOfficer) {
+        const result = await supabase
+          .from('health_examinations')
+          .select('*')
+          .order('examination_date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('health_examinations_limited')
+          .select('*')
+          .order('examination_date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       setExaminations((data as HealthExamination[]) || []);
@@ -426,48 +456,53 @@ const HealthExaminationsContent = () => {
               </div>
               
               <div className="space-y-4">
-                <div>
-                  <Label>نتیجه آزمایش شنوایی</Label>
-                  <Select value={formData.hearing_test_result} onValueChange={(value) => setFormData({...formData, hearing_test_result: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="انتخاب نتیجه" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="نرمال">نرمال</SelectItem>
-                      <SelectItem value="کاهش خفیف">کاهش خفیف</SelectItem>
-                      <SelectItem value="کاهش متوسط">کاهش متوسط</SelectItem>
-                      <SelectItem value="کاهش شدید">کاهش شدید</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>نتیجه آزمایش بینایی</Label>
-                  <Input
-                    value={formData.vision_test_result}
-                    onChange={(e) => setFormData({...formData, vision_test_result: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>فشار خون</Label>
-                  <Input
-                    value={formData.blood_pressure}
-                    onChange={(e) => setFormData({...formData, blood_pressure: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>وضعیت تنفسی</Label>
-                  <Input
-                    value={formData.respiratory_function}
-                    onChange={(e) => setFormData({...formData, respiratory_function: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>ارزیابی عضلانی-اسکلتی</Label>
-                  <Textarea
-                    value={formData.musculoskeletal_assessment}
-                    onChange={(e) => setFormData({...formData, musculoskeletal_assessment: e.target.value})}
-                  />
-                </div>
+                {/* Sensitive health data - only visible to medical officers */}
+                {isMedicalOfficer && (
+                  <>
+                    <div>
+                      <Label>نتیجه آزمایش شنوایی</Label>
+                      <Select value={formData.hearing_test_result} onValueChange={(value) => setFormData({...formData, hearing_test_result: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="انتخاب نتیجه" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="نرمال">نرمال</SelectItem>
+                          <SelectItem value="کاهش خفیف">کاهش خفیف</SelectItem>
+                          <SelectItem value="کاهش متوسط">کاهش متوسط</SelectItem>
+                          <SelectItem value="کاهش شدید">کاهش شدید</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>نتیجه آزمایش بینایی</Label>
+                      <Input
+                        value={formData.vision_test_result}
+                        onChange={(e) => setFormData({...formData, vision_test_result: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>فشار خون</Label>
+                      <Input
+                        value={formData.blood_pressure}
+                        onChange={(e) => setFormData({...formData, blood_pressure: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>وضعیت تنفسی</Label>
+                      <Input
+                        value={formData.respiratory_function}
+                        onChange={(e) => setFormData({...formData, respiratory_function: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>ارزیابی عضلانی-اسکلتی</Label>
+                      <Textarea
+                        value={formData.musculoskeletal_assessment}
+                        onChange={(e) => setFormData({...formData, musculoskeletal_assessment: e.target.value})}
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <Label>آمادگی برای کار</Label>
                   <Select value={formData.fitness_for_work} onValueChange={(value) => setFormData({...formData, fitness_for_work: value})}>
