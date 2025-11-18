@@ -11,8 +11,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Loader2, UserPlus, Trash2, Edit } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { z } from 'zod';
 
 type AppRole = Database['public']['Enums']['app_role'];
+
+// Input validation schema for user invitations
+const userInviteSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must be less than 100 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters'),
+  department: z.string().trim().max(100, 'Department must be less than 100 characters').optional(),
+  role: z.enum(['developer', 'admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'viewer'])
+});
+
+// Input validation schema for user updates
+const userUpdateSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters'),
+  department: z.string().trim().max(100, 'Department must be less than 100 characters').optional().nullable(),
+  role: z.enum(['developer', 'admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'viewer'])
+});
 
 interface UserProfile {
   id: string;
@@ -118,10 +138,20 @@ export default function UserManagementContent() {
   };
 
   const handleInviteUser = async () => {
-    if (!inviteEmail || !invitePassword || !inviteName) {
+    // Validate input using Zod schema
+    const validationResult = userInviteSchema.safeParse({
+      email: inviteEmail,
+      password: invitePassword,
+      name: inviteName,
+      department: inviteDepartment || undefined,
+      role: inviteRole
+    });
+
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0].message;
       toast({
         title: t('error'),
-        description: language === 'fa' ? 'لطفاً تمام فیلدهای الزامی را پر کنید' : 'Please fill all required fields',
+        description: errorMessage,
         variant: 'destructive',
       });
       return;
@@ -130,13 +160,16 @@ export default function UserManagementContent() {
     try {
       setInviteLoading(true);
 
+      // Use validated data
+      const validatedData = validationResult.data;
+
       // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: inviteEmail,
-        password: invitePassword,
+        email: validatedData.email,
+        password: validatedData.password,
         options: {
           data: {
-            name: inviteName,
+            name: validatedData.name,
           },
           emailRedirectTo: `${window.location.origin}/`,
         },
@@ -149,8 +182,8 @@ export default function UserManagementContent() {
         const { error: profileError } = await supabase
           .from('user_profiles')
           .update({
-            name: inviteName,
-            department: inviteDepartment || null,
+            name: validatedData.name,
+            department: validatedData.department || null,
           })
           .eq('user_id', authData.user.id);
 
@@ -167,7 +200,7 @@ export default function UserManagementContent() {
           .from('user_roles')
           .insert({
             user_id: authData.user.id,
-            role: inviteRole,
+            role: validatedData.role,
           });
 
         if (roleError) throw roleError;
@@ -198,13 +231,32 @@ export default function UserManagementContent() {
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
+    // Validate input using Zod schema
+    const validationResult = userUpdateSchema.safeParse({
+      name: selectedUser.name,
+      department: selectedUser.department,
+      role: selectedUser.role || 'viewer'
+    });
+
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0].message;
+      toast({
+        title: t('error'),
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
+      const validatedData = validationResult.data;
+
       // Update profile
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update({
-          name: selectedUser.name,
-          department: selectedUser.department,
+          name: validatedData.name,
+          department: validatedData.department,
           active: selectedUser.active,
         })
         .eq('user_id', selectedUser.user_id);
@@ -222,7 +274,7 @@ export default function UserManagementContent() {
         .from('user_roles')
         .insert({
           user_id: selectedUser.user_id,
-          role: selectedUser.role || 'viewer',
+          role: validatedData.role,
         });
 
       if (roleError) throw roleError;
