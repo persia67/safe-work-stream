@@ -10,7 +10,20 @@ interface LanguageContextType {
 
 const translations = {
   fa: {
-    // Navigation
+    // Navigation - کلیدهای اصلی برای منو
+    'dashboard': 'داشبورد اصلی',
+    'incidents': 'مدیریت حوادث',
+    'ergonomics': 'ارزیابی ارگونومی',
+    'permits': 'مجوزهای کار',
+    'reports': 'گزارش‌های روزانه',
+    'risk': 'ارزیابی ریسک',
+    'health_examinations': 'معاینات طب کار',
+    'safety_training': 'آموزش‌های ایمنی',
+    'analytics': 'تحلیل و آمار',
+    'ai_insights': 'تحلیل هوش مصنوعی',
+    'settings': 'تنظیمات',
+    'user_management': 'مدیریت کاربران',
+    // Navigation - کلیدهای با پیشوند nav (برای سازگاری)
     'nav.dashboard': 'داشبورد اصلی',
     'nav.incidents': 'مدیریت حوادث',
     'nav.ergonomics': 'ارزیابی ارگونومی',
@@ -22,7 +35,6 @@ const translations = {
     'nav.analytics': 'تحلیل و آمار',
     'nav.ai': 'تحلیل هوش مصنوعی',
     'nav.settings': 'تنظیمات',
-    'user_management': 'مدیریت کاربران',
     
     // Common
     'common.add': 'افزودن',
@@ -131,7 +143,20 @@ const translations = {
     'role.viewer': 'بازدیدکننده',
   },
   en: {
-    // Navigation
+    // Navigation - Main keys for menu
+    'dashboard': 'Main Dashboard',
+    'incidents': 'Incident Management',
+    'ergonomics': 'Ergonomic Assessment',
+    'permits': 'Work Permits',
+    'reports': 'Daily Reports',
+    'risk': 'Risk Assessment',
+    'health_examinations': 'Medical Examinations',
+    'safety_training': 'Safety Training',
+    'analytics': 'Analytics',
+    'ai_insights': 'AI Insights',
+    'settings': 'Settings',
+    'user_management': 'User Management',
+    // Navigation - Keys with nav prefix (for compatibility)
     'nav.dashboard': 'Main Dashboard',
     'nav.incidents': 'Incident Management',
     'nav.ergonomics': 'Ergonomic Assessment',
@@ -143,7 +168,6 @@ const translations = {
     'nav.analytics': 'Analytics',
     'nav.ai': 'AI Insights',
     'nav.settings': 'Settings',
-    'user_management': 'User Management',
     
     // Common
     'common.add': 'Add',
