@@ -330,8 +330,16 @@ export const SafetyTrainingContent = () => {
 
   return (
     <div className="space-y-6">
-      {/* نمایش آمار و نمودارها */}
-      {trainings.length > 0 && (
+      {/* دیالوگ مشترک برای افزودن/ویرایش آموزش */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTraining ? "ویرایش آموزش" : "ثبت آموزش جدید"}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] pr-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-2">
         <Tabs defaultValue="list" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="list">
@@ -355,19 +363,19 @@ export const SafetyTrainingContent = () => {
                   <Users className="h-5 w-5" />
                   آموزش‌های ایمنی و بهداشت
                 </CardTitle>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => openDialog()}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                آموزش جدید
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh]">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingTraining ? "ویرایش آموزش" : "ثبت آموزش جدید"}
-                </DialogTitle>
-              </DialogHeader>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => openDialog()}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      آموزش جدید
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh]">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingTraining ? "ویرایش آموزش" : "ثبت آموزش جدید"}
+                      </DialogTitle>
+                    </DialogHeader>
               <ScrollArea className="max-h-[70vh] pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-2">
                   <div>
@@ -681,6 +689,7 @@ export const SafetyTrainingContent = () => {
                   <div className="text-center py-12">
                     <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">هنوز آموزشی ثبت نشده است</p>
+                    <p className="text-sm text-muted-foreground mt-2">برای شروع، دکمه "آموزش جدید" را کلیک کنید</p>
                   </div>
                 </ScrollArea>
               </DialogContent>
