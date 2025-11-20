@@ -155,30 +155,49 @@ export const SafetyTrainingContent = () => {
     try {
       console.log('🔍 Starting save process...', formData);
 
-      if (!formData.training_title || !formData.training_type || 
-          !formData.department || !formData.instructor_name || !formData.training_date) {
+      // Validate input using Zod schema
+      const validationResult = safetyTrainingSchema.safeParse({
+        training_title: formData.training_title,
+        training_type: formData.training_type,
+        training_date: formData.training_date,
+        department: formData.department,
+        instructor_name: formData.instructor_name,
+        duration_hours: formData.duration_hours || 2,
+        participants: formData.participants || [],
+        training_content: formData.training_content || '',
+        objectives: formData.objectives || [],
+        assessment_method: formData.assessment_method || '',
+        pass_score: formData.pass_score || 70,
+        status: formData.status || 'برنامه‌ریزی شده',
+      });
+
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0].message;
         toast({ 
           title: "خطا", 
-          description: "لطفا تمام فیلدهای الزامی را پر کنید",
+          description: errorMessage,
           variant: "destructive" 
         });
         return;
       }
 
+      // Use validated data
+      const validatedData = validationResult.data;
+
       const dataToSave = {
-        training_title: formData.training_title.trim(),
-        training_type: formData.training_type,
-        department: formData.department,
-        instructor_name: formData.instructor_name.trim(),
-        training_date: formData.training_date,
-        duration_hours: formData.duration_hours || 2,
-        participants: formData.participants || [],
-        training_content: formData.training_content?.trim() || '',
-        objectives: formData.objectives || [],
-        assessment_method: formData.assessment_method || '',
-        pass_score: formData.pass_score || 70,
+        training_title: validatedData.training_title,
+        training_type: validatedData.training_type,
+        department: validatedData.department,
+        instructor_name: validatedData.instructor_name,
+        training_date: validatedData.training_date,
+        duration_hours: validatedData.duration_hours,
+        participants: validatedData.participants,
+        training_content: validatedData.training_content || '',
+        objectives: validatedData.objectives,
+        assessment_method: validatedData.assessment_method || '',
+        pass_score: validatedData.pass_score || 70,
         certificate_issued: formData.certificate_issued || false,
-        status: formData.status || 'برنامه‌ریزی شده',
+        status: validatedData.status || 'برنامه‌ریزی شده',
         attendance_count: formData.attendance_count || 0,
         pass_count: formData.pass_count || 0,
         effectiveness_score: formData.effectiveness_score || null,
