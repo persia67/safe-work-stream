@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -349,6 +349,155 @@ export const SafetyTrainingContent = () => {
 
   return (
     <div className="space-y-6">
+      {/* Dialog مشترک برای ایجاد/ویرایش آموزش */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          resetForm();
+        }
+        setDialogOpen(open);
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTraining ? "ویرایش آموزش" : "ثبت آموزش جدید"}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] pr-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-2">
+              <div>
+                <Label>عنوان آموزش*</Label>
+                <Input
+                  value={formData.training_title}
+                  onChange={(e) => setFormData({...formData, training_title: e.target.value})}
+                  placeholder="عنوان آموزش را وارد کنید"
+                />
+              </div>
+              <div>
+                <Label>نوع آموزش*</Label>
+                <Select value={formData.training_type} onValueChange={(value) => setFormData({...formData, training_type: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="انتخاب نوع آموزش" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="آموزش عمومی ایمنی">آموزش عمومی ایمنی</SelectItem>
+                    <SelectItem value="آموزش تخصصی">آموزش تخصصی</SelectItem>
+                    <SelectItem value="آموزش بهداشت کار">آموزش بهداشت کار</SelectItem>
+                    <SelectItem value="آموزش آتش‌نشانی">آموزش آتش‌نشانی</SelectItem>
+                    <SelectItem value="آموزش کمک‌های اولیه">آموزش کمک‌های اولیه</SelectItem>
+                    <SelectItem value="آموزش محیط زیست">آموزش محیط زیست</SelectItem>
+                    <SelectItem value="آموزش کار در ارتفاع">آموزش کار در ارتفاع</SelectItem>
+                    <SelectItem value="آموزش مواد شیمیایی">آموزش مواد شیمیایی</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>بخش*</Label>
+                <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="انتخاب بخش" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
+                    <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
+                    <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
+                    <SelectItem value="جوشکاری">جوشکاری</SelectItem>
+                    <SelectItem value="شیت کن">شیت کن</SelectItem>
+                    <SelectItem value="تاسیسات">تاسیسات</SelectItem>
+                    <SelectItem value="تعمیرات">تعمیرات</SelectItem>
+                    <SelectItem value="اداری">اداری</SelectItem>
+                    <SelectItem value="HSE">HSE</SelectItem>
+                    <SelectItem value="همه بخش‌ها">همه بخش‌ها</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>نام مدرس*</Label>
+                <Input
+                  value={formData.instructor_name}
+                  onChange={(e) => setFormData({...formData, instructor_name: e.target.value})}
+                  placeholder="نام مدرس را وارد کنید"
+                />
+              </div>
+              <div>
+                <Label>تاریخ آموزش*</Label>
+                <Input
+                  type="date"
+                  value={formData.training_date}
+                  onChange={(e) => setFormData({...formData, training_date: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>مدت آموزش (ساعت)</Label>
+                <Input
+                  type="number"
+                  value={formData.duration_hours}
+                  onChange={(e) => setFormData({...formData, duration_hours: parseInt(e.target.value) || 0})}
+                  min="1"
+                  max="40"
+                />
+              </div>
+              <div>
+                <Label>روش ارزیابی</Label>
+                <Select value={formData.assessment_method} onValueChange={(value) => setFormData({...formData, assessment_method: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="انتخاب روش ارزیابی" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="آزمون کتبی">آزمون کتبی</SelectItem>
+                    <SelectItem value="آزمون عملی">آزمون عملی</SelectItem>
+                    <SelectItem value="ارزیابی ترکیبی">ارزیابی ترکیبی</SelectItem>
+                    <SelectItem value="مشاهده عملکرد">مشاهده عملکرد</SelectItem>
+                    <SelectItem value="ارائه پروژه">ارائه پروژه</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>نمره قبولی</Label>
+                <Input
+                  type="number"
+                  value={formData.pass_score}
+                  onChange={(e) => setFormData({...formData, pass_score: parseInt(e.target.value) || 70})}
+                  min="50"
+                  max="100"
+                />
+              </div>
+              <div>
+                <Label>تعداد حاضران</Label>
+                <Input
+                  type="number"
+                  value={formData.attendance_count}
+                  onChange={(e) => setFormData({...formData, attendance_count: parseInt(e.target.value) || 0})}
+                  min="0"
+                />
+              </div>
+              <div>
+                <Label>تعداد قبولی‌ها</Label>
+                <Input
+                  type="number"
+                  value={formData.pass_count}
+                  onChange={(e) => setFormData({...formData, pass_count: parseInt(e.target.value) || 0})}
+                  min="0"
+                  max={formData.attendance_count}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label>محتوای آموزش</Label>
+                <Textarea
+                  value={formData.training_content}
+                  onChange={(e) => setFormData({...formData, training_content: e.target.value})}
+                  placeholder="شرح محتوای آموزش..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>انصراف</Button>
+              <Button onClick={handleSave}>ذخیره</Button>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       {/* نمایش آمار و نمودارها */}
       {trainings.length > 0 && (
         <Tabs defaultValue="list" className="w-full">
@@ -374,310 +523,161 @@ export const SafetyTrainingContent = () => {
                   <Users className="h-5 w-5" />
                   آموزش‌های ایمنی و بهداشت
                 </CardTitle>
-                <Dialog open={dialogOpen} onOpenChange={(open) => {
-                  if (open) {
-                    resetForm();
-                  }
-                  setDialogOpen(open);
-                }}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      آموزش جدید
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingTraining ? "ویرایش آموزش" : "ثبت آموزش جدید"}
-                      </DialogTitle>
-                    </DialogHeader>
-              <ScrollArea className="max-h-[70vh] pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 space-y-2">
-                  <div>
-                    <Label>عنوان آموزش*</Label>
-                    <Input
-                      value={formData.training_title}
-                      onChange={(e) => setFormData({...formData, training_title: e.target.value})}
-                      placeholder="عنوان آموزش را وارد کنید"
-                    />
-                  </div>
-                  <div>
-                    <Label>نوع آموزش*</Label>
-                    <Select value={formData.training_type} onValueChange={(value) => setFormData({...formData, training_type: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب نوع آموزش" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="آموزش عمومی ایمنی">آموزش عمومی ایمنی</SelectItem>
-                        <SelectItem value="آموزش تخصصی">آموزش تخصصی</SelectItem>
-                        <SelectItem value="آموزش بهداشت کار">آموزش بهداشت کار</SelectItem>
-                        <SelectItem value="آموزش آتش‌نشانی">آموزش آتش‌نشانی</SelectItem>
-                        <SelectItem value="آموزش کمک‌های اولیه">آموزش کمک‌های اولیه</SelectItem>
-                        <SelectItem value="آموزش محیط زیست">آموزش محیط زیست</SelectItem>
-                        <SelectItem value="آموزش کار در ارتفاع">آموزش کار در ارتفاع</SelectItem>
-                        <SelectItem value="آموزش مواد شیمیایی">آموزش مواد شیمیایی</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>بخش*</Label>
-                    <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب بخش" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
-                        <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
-                        <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
-                        <SelectItem value="جوشکاری">جوشکاری</SelectItem>
-                        <SelectItem value="شیت کن">شیت کن</SelectItem>
-                        <SelectItem value="تاسیسات">تاسیسات</SelectItem>
-                        <SelectItem value="تعمیرات">تعمیرات</SelectItem>
-                        <SelectItem value="اداری">اداری</SelectItem>
-                        <SelectItem value="HSE">HSE</SelectItem>
-                        <SelectItem value="همه بخش‌ها">همه بخش‌ها</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>نام مدرس*</Label>
-                    <Input
-                      value={formData.instructor_name}
-                      onChange={(e) => setFormData({...formData, instructor_name: e.target.value})}
-                      placeholder="نام مدرس را وارد کنید"
-                    />
-                  </div>
-                  <div>
-                    <Label>تاریخ آموزش*</Label>
-                    <Input
-                      type="date"
-                      value={formData.training_date}
-                      onChange={(e) => setFormData({...formData, training_date: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>مدت آموزش (ساعت)</Label>
-                    <Input
-                      type="number"
-                      value={formData.duration_hours}
-                      onChange={(e) => setFormData({...formData, duration_hours: parseInt(e.target.value) || 0})}
-                      min="1"
-                      max="40"
-                    />
-                  </div>
-                  <div>
-                    <Label>روش ارزیابی</Label>
-                    <Select value={formData.assessment_method} onValueChange={(value) => setFormData({...formData, assessment_method: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="انتخاب روش ارزیابی" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="آزمون کتبی">آزمون کتبی</SelectItem>
-                        <SelectItem value="آزمون عملی">آزمون عملی</SelectItem>
-                        <SelectItem value="ارزیابی ترکیبی">ارزیابی ترکیبی</SelectItem>
-                        <SelectItem value="مشاهده عملکرد">مشاهده عملکرد</SelectItem>
-                        <SelectItem value="ارائه پروژه">ارائه پروژه</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>نمره قبولی</Label>
-                    <Input
-                      type="number"
-                      value={formData.pass_score}
-                      onChange={(e) => setFormData({...formData, pass_score: parseInt(e.target.value) || 70})}
-                      min="50"
-                      max="100"
-                    />
-                  </div>
-                  <div>
-                    <Label>تعداد حاضران</Label>
-                    <Input
-                      type="number"
-                      value={formData.attendance_count}
-                      onChange={(e) => setFormData({...formData, attendance_count: parseInt(e.target.value) || 0})}
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <Label>تعداد قبولی‌ها</Label>
-                    <Input
-                      type="number"
-                      value={formData.pass_count}
-                      onChange={(e) => setFormData({...formData, pass_count: parseInt(e.target.value) || 0})}
-                      min="0"
-                      max={formData.attendance_count}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label>محتوای آموزش</Label>
-                    <Textarea
-                      value={formData.training_content}
-                      onChange={(e) => setFormData({...formData, training_content: e.target.value})}
-                      placeholder="شرح محتوای آموزش..."
-                      rows={3}
-                    />
-                  </div>
+                <Button onClick={() => openDialog()}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  آموزش جدید
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {trainings.map((training) => (
+                    <Card key={training.id} className="border-l-4 border-l-primary">
+                      <CardContent className="pt-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-semibold text-lg">{training.training_title}</h3>
+                            <p className="text-muted-foreground">{training.training_type} - {training.department}</p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                {formatPersianDate(training.training_date)}
+                              </span>
+                              <span>{training.duration_hours} ساعت</span>
+                              <span>مدرس: {training.instructor_name}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={training.status === 'تکمیل شده' ? 'default' : 'secondary'}>
+                              {training.status}
+                            </Badge>
+                            <Button variant="outline" size="sm" onClick={() => openDialog(training)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDelete(training.id!)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {training.attendance_count > 0 && (
+                          <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg mb-4">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-primary">{training.attendance_count}</div>
+                              <div className="text-sm text-muted-foreground">شرکت‌کننده</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-600">{training.pass_count}</div>
+                              <div className="text-sm text-muted-foreground">قبولی</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-blue-600">
+                                {Math.round((training.pass_count / training.attendance_count) * 100)}%
+                              </div>
+                              <div className="text-sm text-muted-foreground">نرخ موفقیت</div>
+                            </div>
+                          </div>
+                        )}
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            const analysis = await generateAIAnalysis(training);
+                            if (analysis) {
+                              setTrainings(prev => prev.map(t => 
+                                t.id === training.id ? { ...t, ai_analysis: analysis } : t
+                              ));
+                              toast({
+                                title: "موفق",
+                                description: "تحلیل هوش مصنوعی تولید شد"
+                              });
+                            }
+                          }}
+                          disabled={aiAnalysisLoading}
+                          className="mb-4"
+                        >
+                          <Brain className="h-4 w-4 mr-2" />
+                          {aiAnalysisLoading ? 'در حال تحلیل...' : 'تحلیل هوش مصنوعی'}
+                        </Button>
+
+                        {training.ai_analysis && (
+                          <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg border">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <Brain className="h-5 w-5 text-blue-600" />
+                              تحلیل هوش مصنوعی آموزش
+                            </h4>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                                <div className="text-2xl font-bold text-green-600">{training.ai_analysis.success_rate}%</div>
+                                <div className="text-sm text-muted-foreground">نرخ موفقیت</div>
+                              </div>
+                              <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                                <div className="text-2xl font-bold text-blue-600">{training.ai_analysis.quality_score}</div>
+                                <div className="text-sm text-muted-foreground">امتیاز کیفیت</div>
+                              </div>
+                              <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                                <div className="text-lg font-bold text-purple-600">{training.ai_analysis.effectiveness_rating}</div>
+                                <div className="text-sm text-muted-foreground">سطح اثربخشی</div>
+                              </div>
+                            </div>
+
+                            <Tabs defaultValue="recommendations" className="w-full">
+                              <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="recommendations">پیشنهادات</TabsTrigger>
+                                <TabsTrigger value="followup">اقدامات پیگیری</TabsTrigger>
+                                <TabsTrigger value="improvements">بهبودها</TabsTrigger>
+                              </TabsList>
+                              
+                              <TabsContent value="recommendations" className="space-y-2">
+                                {training.ai_analysis.recommendations?.map((rec: string, index: number) => (
+                                  <div key={index} className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-950/20 rounded">
+                                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm">{rec}</span>
+                                  </div>
+                                ))}
+                              </TabsContent>
+                              
+                              <TabsContent value="followup" className="space-y-2">
+                                {training.ai_analysis.follow_up_actions?.map((action: string, index: number) => (
+                                  <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
+                                    <Clock className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm">{action}</span>
+                                  </div>
+                                ))}
+                              </TabsContent>
+                              
+                              <TabsContent value="improvements" className="space-y-2">
+                                {training.ai_analysis.improvement_suggestions?.map((suggestion: string, index: number) => (
+                                  <div key={index} className="flex items-start gap-2 p-2 bg-orange-50 dark:bg-orange-950/20 rounded">
+                                    <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm">{suggestion}</span>
+                                  </div>
+                                ))}
+                              </TabsContent>
+                            </Tabs>
+
+                            {training.ai_analysis.critical_points?.length > 0 && (
+                              <Alert>
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertDescription>
+                                  <strong>نکات مهم:</strong>
+                                  <ul className="list-disc list-inside mt-2">
+                                    {training.ai_analysis.critical_points.map((point: string, index: number) => (
+                                      <li key={index} className="text-sm">{point}</li>
+                                    ))}
+                                  </ul>
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-                <div className="flex justify-end space-x-2 mt-6">
-                  <Button variant="outline" onClick={() => setDialogOpen(false)}>انصراف</Button>
-                  <Button onClick={handleSave}>ذخیره</Button>
-                </div>
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {trainings.map((training) => (
-              <Card key={training.id} className="border-l-4 border-l-primary">
-                <CardContent className="pt-4">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{training.training_title}</h3>
-                      <p className="text-muted-foreground">{training.training_type} - {training.department}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {formatPersianDate(training.training_date)}
-                        </span>
-                        <span>{training.duration_hours} ساعت</span>
-                        <span>مدرس: {training.instructor_name}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={training.status === 'تکمیل شده' ? 'default' : 'secondary'}>
-                        {training.status}
-                      </Badge>
-                      <Button variant="outline" size="sm" onClick={() => openDialog(training)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(training.id!)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {training.attendance_count > 0 && (
-                    <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg mb-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">{training.attendance_count}</div>
-                        <div className="text-sm text-muted-foreground">شرکت‌کننده</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">{training.pass_count}</div>
-                        <div className="text-sm text-muted-foreground">قبولی</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {Math.round((training.pass_count / training.attendance_count) * 100)}%
-                        </div>
-                        <div className="text-sm text-muted-foreground">نرخ موفقیت</div>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      const analysis = await generateAIAnalysis(training);
-                      if (analysis) {
-                        setTrainings(prev => prev.map(t => 
-                          t.id === training.id ? { ...t, ai_analysis: analysis } : t
-                        ));
-                        toast({
-                          title: "موفق",
-                          description: "تحلیل هوش مصنوعی تولید شد"
-                        });
-                      }
-                    }}
-                    disabled={aiAnalysisLoading}
-                    className="mb-4"
-                  >
-                    <Brain className="h-4 w-4 mr-2" />
-                    {aiAnalysisLoading ? 'در حال تحلیل...' : 'تحلیل هوش مصنوعی'}
-                  </Button>
-
-                  {training.ai_analysis && (
-                    <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-lg border">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-blue-600" />
-                        تحلیل هوش مصنوعی آموزش
-                      </h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600">{training.ai_analysis.success_rate}%</div>
-                          <div className="text-sm text-muted-foreground">نرخ موفقیت</div>
-                        </div>
-                        <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <div className="text-2xl font-bold text-blue-600">{training.ai_analysis.quality_score}</div>
-                          <div className="text-sm text-muted-foreground">امتیاز کیفیت</div>
-                        </div>
-                        <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
-                          <div className="text-lg font-bold text-purple-600">{training.ai_analysis.effectiveness_rating}</div>
-                          <div className="text-sm text-muted-foreground">سطح اثربخشی</div>
-                        </div>
-                      </div>
-
-                      <Tabs defaultValue="recommendations" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                          <TabsTrigger value="recommendations">پیشنهادات</TabsTrigger>
-                          <TabsTrigger value="followup">اقدامات پیگیری</TabsTrigger>
-                          <TabsTrigger value="improvements">بهبودها</TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="recommendations" className="space-y-2">
-                          {training.ai_analysis.recommendations?.map((rec: string, index: number) => (
-                            <div key={index} className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-950/20 rounded">
-                              <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">{rec}</span>
-                            </div>
-                          ))}
-                        </TabsContent>
-                        
-                        <TabsContent value="followup" className="space-y-2">
-                          {training.ai_analysis.follow_up_actions?.map((action: string, index: number) => (
-                            <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
-                              <Clock className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">{action}</span>
-                            </div>
-                          ))}
-                        </TabsContent>
-                        
-                        <TabsContent value="improvements" className="space-y-2">
-                          {training.ai_analysis.improvement_suggestions?.map((suggestion: string, index: number) => (
-                            <div key={index} className="flex items-start gap-2 p-2 bg-orange-50 dark:bg-orange-950/20 rounded">
-                              <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">{suggestion}</span>
-                            </div>
-                          ))}
-                        </TabsContent>
-                      </Tabs>
-
-                      {training.ai_analysis.critical_points?.length > 0 && (
-                        <Alert>
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription>
-                            <strong>نکات مهم:</strong>
-                            <ul className="list-disc list-inside mt-2">
-                              {training.ai_analysis.critical_points.map((point: string, index: number) => (
-                                <li key={index} className="text-sm">{point}</li>
-                              ))}
-                            </ul>
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       )}
