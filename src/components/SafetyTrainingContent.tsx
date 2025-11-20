@@ -374,9 +374,14 @@ export const SafetyTrainingContent = () => {
                   <Users className="h-5 w-5" />
                   آموزش‌های ایمنی و بهداشت
                 </CardTitle>
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <Dialog open={dialogOpen} onOpenChange={(open) => {
+                  if (open) {
+                    resetForm();
+                  }
+                  setDialogOpen(open);
+                }}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => openDialog()}>
+                    <Button>
                       <PlusCircle className="h-4 w-4 mr-2" />
                       آموزش جدید
                     </Button>
