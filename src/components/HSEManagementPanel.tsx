@@ -3534,9 +3534,27 @@ const AnalyticsContent = ({ incidents, ergonomicAssessments, workPermits, dailyR
                     data={riskDistributionData}
                     cx="50%"
                     cy="50%"
-                    labelLine={{ stroke: 'var(--foreground)', strokeWidth: 1 }}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={90}
+                    labelLine={false}
+                    label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                      const RADIAN = Math.PI / 180;
+                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      return (
+                        <text 
+                          x={x} 
+                          y={y} 
+                          fill="white" 
+                          textAnchor={x > cx ? 'start' : 'end'} 
+                          dominantBaseline="central"
+                          style={{ fontSize: '14px', fontWeight: 'bold' }}
+                        >
+                          {`${name}`}
+                          <tspan x={x} dy="1.2em">{`${(percent * 100).toFixed(0)}%`}</tspan>
+                        </text>
+                      );
+                    }}
+                    outerRadius={110}
                     fill="#8884d8"
                     dataKey="value"
                   >
