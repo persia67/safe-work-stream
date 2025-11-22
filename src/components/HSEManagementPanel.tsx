@@ -3534,9 +3534,9 @@ const AnalyticsContent = ({ incidents, ergonomicAssessments, workPermits, dailyR
                     data={riskDistributionData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
+                    labelLine={{ stroke: 'var(--foreground)', strokeWidth: 1 }}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
+                    outerRadius={90}
                     fill="#8884d8"
                     dataKey="value"
                   >
