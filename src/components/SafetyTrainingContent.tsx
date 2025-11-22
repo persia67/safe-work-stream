@@ -419,14 +419,6 @@ export const SafetyTrainingContent = () => {
                 />
               </div>
               <div>
-                <Label>تاریخ آموزش*</Label>
-                <Input
-                  type="date"
-                  value={formData.training_date}
-                  onChange={(e) => setFormData({...formData, training_date: e.target.value})}
-                />
-              </div>
-              <div>
                 <Label>مدت آموزش (ساعت)</Label>
                 <Input
                   type="number"
