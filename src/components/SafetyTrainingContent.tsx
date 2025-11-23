@@ -155,7 +155,7 @@ export const SafetyTrainingContent = () => {
     try {
       console.log('🔍 Starting save process...', formData);
 
-      // Validate input using Zod schema
+      // Validate input
       const validationResult = safetyTrainingSchema.safeParse({
         training_title: formData.training_title,
         training_type: formData.training_type,
@@ -181,7 +181,6 @@ export const SafetyTrainingContent = () => {
         return;
       }
 
-      // Use validated data
       const validatedData = validationResult.data;
 
       const dataToSave = {
@@ -205,58 +204,54 @@ export const SafetyTrainingContent = () => {
         ai_analysis: formData.ai_analysis || null
       };
 
-      console.log('📦 Data to save:', dataToSave);
+      // Get organization
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('organization_id')
+        .eq('user_id', user?.id)
+        .single();
 
-      if (editingTraining) {
-        console.log('✏️ Updating training...', editingTraining.id);
-        const { data, error } = await supabase
-          .from('safety_trainings')
-          .update(dataToSave)
-          .eq('id', editingTraining.id)
-          .select();
+      const finalData = { ...dataToSave, organization_id: profile?.organization_id };
 
-        console.log('Update result:', { data, error });
-
-        if (error) {
-          console.error('❌ Update error:', error);
-          throw error;
+      if (navigator.onLine) {
+        // Online save
+        if (editingTraining) {
+          const { error } = await supabase
+            .from('safety_trainings')
+            .update(finalData)
+            .eq('id', editingTraining.id);
+          if (error) throw error;
+          toast({ title: "موفق", description: "آموزش به‌روزرسانی شد" });
+        } else {
+          const { error } = await supabase
+            .from('safety_trainings')
+            .insert([finalData]);
+          if (error) throw error;
+          toast({ title: "موفق", description: "آموزش ثبت شد" });
         }
-        toast({ title: "موفق", description: "اطلاعات آموزش با موفقیت به‌روزرسانی شد" });
       } else {
-        console.log('➕ Inserting new training...');
-        const { data, error } = await supabase
-          .from('safety_trainings')
-          .insert([dataToSave])
-          .select();
-
-        console.log('Insert result:', { data, error });
-
-        if (error) {
-          console.error('❌ Insert error:', error);
-          throw error;
-        }
-        toast({ title: "موفق", description: "آموزش جدید با موفقیت ثبت شد" });
+        // Offline save
+        const { syncManager } = await import('@/lib/syncManager');
+        await syncManager.saveOffline(
+          'safety_trainings',
+          editingTraining ? 'update' : 'insert',
+          editingTraining ? { ...finalData, id: editingTraining.id } : { ...finalData, id: crypto.randomUUID() }
+        );
+        toast({
+          title: 'ذخیره محلی',
+          description: 'داده‌ها محلی ذخیره شد و با اتصال همگام می‌شود',
+        });
       }
 
       await fetchTrainings();
       setDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error('Error saving training:', error);
-      
-      let errorMessage = 'خطا در ذخیره اطلاعات';
-      
-      if (error?.code === '42501') {
-        errorMessage = 'شما مجوز ثبت آموزش ندارید. لطفاً ابتدا وارد سیستم شوید.';
-      } else if (error?.code === '23502') {
-        errorMessage = `فیلد الزامی خالی است: ${error.details || error.message}`;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      
+      console.error('Error saving:', error);
       toast({
-        title: "خطا در ذخیره",
-        description: errorMessage,
+        title: "خطا",
+        description: error.message || 'خطا در ذخیره',
         variant: "destructive"
       });
     }

@@ -39,7 +39,10 @@ import {
   Mail,
   Phone,
   Sparkles,
-  Loader2
+  Loader2,
+  Wifi,
+  WifiOff,
+  Cloud
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import HealthExaminationsContent from './HealthExaminationsContent';
@@ -49,6 +52,8 @@ import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
 import { HSEAIChat } from './HSEAIChat';
 import { ThemeLanguageToggle } from './ThemeLanguageToggle';
 import UserManagementContent from './UserManagementContent';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -63,12 +68,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getTodayPersian } from '@/lib/dateUtils';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 // HSE Management Panel - Main Application Component
 const HSEManagementPanel = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { isOnline, pendingCount, syncNow } = useOfflineSync();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>('viewer');
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1055,6 +1060,20 @@ const HSEManagementPanel = () => {
               </div>
               
               <div className="flex items-center gap-3 flex-shrink-0">
+                <Badge 
+                  variant={isOnline ? "default" : "destructive"} 
+                  className="gap-2 cursor-pointer"
+                  onClick={syncNow}
+                >
+                  {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                  {isOnline ? 'آنلاین' : 'آفلاین'}
+                  {pendingCount > 0 && (
+                    <>
+                      <Cloud className="h-3 w-3" />
+                      {pendingCount}
+                    </>
+                  )}
+                </Badge>
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg text-sm text-muted-foreground">
                   <Clock className="w-4 h-4 text-primary" />
                   <span>{getTodayPersian()}</span>
