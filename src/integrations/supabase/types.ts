@@ -24,6 +24,7 @@ export type Database = {
           maintenance_requests: number | null
           near_misses: number | null
           officer_id: string | null
+          organization_id: string | null
           ppe_distributed: number | null
           report_date: string
           report_text: string | null
@@ -46,6 +47,7 @@ export type Database = {
           maintenance_requests?: number | null
           near_misses?: number | null
           officer_id?: string | null
+          organization_id?: string | null
           ppe_distributed?: number | null
           report_date: string
           report_text?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           maintenance_requests?: number | null
           near_misses?: number | null
           officer_id?: string | null
+          organization_id?: string | null
           ppe_distributed?: number | null
           report_date?: string
           report_text?: string | null
@@ -89,6 +92,13 @@ export type Database = {
             referencedRelation: "user_profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "daily_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ergonomic_assessments: {
@@ -104,6 +114,7 @@ export type Database = {
           final_score: number
           follow_up_date: string | null
           id: string
+          organization_id: string | null
           position: string
           recommendations: string[] | null
           risk_level: string
@@ -124,6 +135,7 @@ export type Database = {
           final_score: number
           follow_up_date?: string | null
           id?: string
+          organization_id?: string | null
           position: string
           recommendations?: string[] | null
           risk_level: string
@@ -144,6 +156,7 @@ export type Database = {
           final_score?: number
           follow_up_date?: string | null
           id?: string
+          organization_id?: string | null
           position?: string
           recommendations?: string[] | null
           risk_level?: string
@@ -159,6 +172,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ergonomic_assessments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -182,6 +202,7 @@ export type Database = {
           id: string
           musculoskeletal_assessment: string | null
           next_examination_date: string | null
+          organization_id: string | null
           position: string
           respiratory_function: string | null
           status: string | null
@@ -207,6 +228,7 @@ export type Database = {
           id?: string
           musculoskeletal_assessment?: string | null
           next_examination_date?: string | null
+          organization_id?: string | null
           position: string
           respiratory_function?: string | null
           status?: string | null
@@ -232,13 +254,22 @@ export type Database = {
           id?: string
           musculoskeletal_assessment?: string | null
           next_examination_date?: string | null
+          organization_id?: string | null
           position?: string
           respiratory_function?: string | null
           status?: string | null
           updated_at?: string
           vision_test_result?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "health_examinations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       incidents: {
         Row: {
@@ -250,6 +281,7 @@ export type Database = {
           incident_time: string
           injured_person: string | null
           location: string
+          organization_id: string | null
           preventive_action: string | null
           reporter_id: string | null
           root_cause: string | null
@@ -268,6 +300,7 @@ export type Database = {
           incident_time: string
           injured_person?: string | null
           location: string
+          organization_id?: string | null
           preventive_action?: string | null
           reporter_id?: string | null
           root_cause?: string | null
@@ -286,6 +319,7 @@ export type Database = {
           incident_time?: string
           injured_person?: string | null
           location?: string
+          organization_id?: string | null
           preventive_action?: string | null
           reporter_id?: string | null
           root_cause?: string | null
@@ -297,6 +331,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "incidents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "incidents_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
@@ -304,6 +345,33 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      organizations: {
+        Row: {
+          active: boolean | null
+          code: string
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       risk_assessments: {
         Row: {
@@ -315,6 +383,7 @@ export type Database = {
           hazard: string
           hazard_category: string | null
           id: string
+          organization_id: string | null
           probability: string
           process_name: string
           responsible_person_id: string | null
@@ -334,6 +403,7 @@ export type Database = {
           hazard: string
           hazard_category?: string | null
           id?: string
+          organization_id?: string | null
           probability: string
           process_name: string
           responsible_person_id?: string | null
@@ -353,6 +423,7 @@ export type Database = {
           hazard?: string
           hazard_category?: string | null
           id?: string
+          organization_id?: string | null
           probability?: string
           process_name?: string
           responsible_person_id?: string | null
@@ -364,6 +435,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "risk_assessments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "risk_assessments_responsible_person_id_fkey"
             columns: ["responsible_person_id"]
@@ -423,6 +501,7 @@ export type Database = {
           id: string
           instructor_name: string
           objectives: string[] | null
+          organization_id: string | null
           participants: string[] | null
           pass_count: number | null
           pass_score: number | null
@@ -446,6 +525,7 @@ export type Database = {
           id?: string
           instructor_name: string
           objectives?: string[] | null
+          organization_id?: string | null
           participants?: string[] | null
           pass_count?: number | null
           pass_score?: number | null
@@ -469,6 +549,7 @@ export type Database = {
           id?: string
           instructor_name?: string
           objectives?: string[] | null
+          organization_id?: string | null
           participants?: string[] | null
           pass_count?: number | null
           pass_score?: number | null
@@ -479,7 +560,15 @@ export type Database = {
           training_type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "safety_trainings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {
@@ -491,6 +580,7 @@ export type Database = {
           id: string
           last_login: string | null
           name: string
+          organization_id: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -504,6 +594,7 @@ export type Database = {
           id?: string
           last_login?: string | null
           name: string
+          organization_id?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -517,11 +608,20 @@ export type Database = {
           id?: string
           last_login?: string | null
           name?: string
+          organization_id?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -554,6 +654,7 @@ export type Database = {
           end_time: string
           hazards: string[] | null
           id: string
+          organization_id: string | null
           permit_date: string
           permit_number: string
           precautions: string[] | null
@@ -572,6 +673,7 @@ export type Database = {
           end_time: string
           hazards?: string[] | null
           id?: string
+          organization_id?: string | null
           permit_date: string
           permit_number: string
           precautions?: string[] | null
@@ -590,6 +692,7 @@ export type Database = {
           end_time?: string
           hazards?: string[] | null
           id?: string
+          organization_id?: string | null
           permit_date?: string
           permit_number?: string
           precautions?: string[] | null
@@ -609,6 +712,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "work_permits_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "work_permits_requester_id_fkey"
@@ -673,6 +783,7 @@ export type Database = {
     Functions: {
       can_view_limited_health_data: { Args: never; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
+      get_user_organization: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
