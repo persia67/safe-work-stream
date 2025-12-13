@@ -45,6 +45,32 @@ serve(async (req) => {
 
     console.log('Authenticated user:', user.id);
 
+    // Authorization: Check user role
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleError || !roleData) {
+      console.error('Role check failed:', roleError);
+      return new Response(JSON.stringify({ error: 'دسترسی غیرمجاز' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const allowedRoles = ['admin', 'senior_manager', 'developer', 'safety_officer', 'supervisor', 'medical_officer'];
+    if (!allowedRoles.includes(roleData.role)) {
+      console.log('User role not authorized:', roleData.role);
+      return new Response(JSON.stringify({ error: 'شما مجوز دسترسی به این قابلیت را ندارید' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('User authorized with role:', roleData.role);
+
     const { messages, pageContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
