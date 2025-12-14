@@ -106,13 +106,29 @@ serve(async (req) => {
       }
     });
 
+    // Format phone to E.164 if provided
+    let formattedPhone: string | undefined;
+    if (phone) {
+      let cleanPhone = phone.replace(/\s+/g, '').replace(/-/g, '');
+      // Convert Iranian format to E.164
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = '+98' + cleanPhone.substring(1);
+      } else if (!cleanPhone.startsWith('+')) {
+        cleanPhone = '+98' + cleanPhone;
+      }
+      // Validate E.164 format
+      if (/^\+[1-9]\d{6,14}$/.test(cleanPhone)) {
+        formattedPhone = cleanPhone;
+      }
+    }
+
     // Create user using admin API (email is auto-confirmed)
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirm email
-      phone: phone || undefined,
-      phone_confirm: phone ? true : undefined,
+      phone: formattedPhone,
+      phone_confirm: formattedPhone ? true : undefined,
       user_metadata: {
         name,
       }
