@@ -84,7 +84,7 @@ export const SafetyTrainingContent = () => {
       if (error) throw error;
       setTrainings((data as SafetyTraining[]) || []);
     } catch (error) {
-      console.error('Error fetching trainings:', error);
+      if (import.meta.env.DEV) console.error('Error fetching trainings:', error);
       toast({
         title: "خطا",
         description: "خطا در بارگذاری اطلاعات آموزش‌ها",
@@ -144,7 +144,7 @@ export const SafetyTrainingContent = () => {
 
       return mockAnalysis;
     } catch (error) {
-      console.error('Error generating AI analysis:', error);
+      if (import.meta.env.DEV) console.error('Error generating AI analysis:', error);
       return null;
     } finally {
       setAiAnalysisLoading(false);
@@ -248,7 +248,7 @@ export const SafetyTrainingContent = () => {
       setDialogOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error('Error saving:', error);
+      if (import.meta.env.DEV) console.error('Error saving:', error);
       toast({
         title: "خطا",
         description: error.message || 'خطا در ذخیره',
@@ -269,7 +269,7 @@ export const SafetyTrainingContent = () => {
       await fetchTrainings();
       toast({ title: "موفق", description: "آموزش با موفقیت حذف شد" });
     } catch (error) {
-      console.error('Error deleting training:', error);
+      if (import.meta.env.DEV) console.error('Error deleting training:', error);
       toast({
         title: "خطا",
         description: "خطا در حذف آموزش",

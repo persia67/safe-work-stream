@@ -91,7 +91,7 @@ const HSEManagementPanel = () => {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
-          console.error('خطا در دریافت کاربر:', userError);
+          if (import.meta.env.DEV) console.error('خطا در دریافت کاربر:', userError);
           setLoading(false);
           return;
         }
@@ -105,7 +105,7 @@ const HSEManagementPanel = () => {
 
         // If profile doesn't exist, create it
         if (profileError || !profile) {
-          console.warn('پروفایل کاربر یافت نشد، در حال ایجاد...');
+          if (import.meta.env.DEV) console.warn('پروفایل کاربر یافت نشد، در حال ایجاد...');
           
           const { error: createError } = await supabase
             .from('user_profiles')
@@ -117,7 +117,7 @@ const HSEManagementPanel = () => {
             });
 
           if (createError) {
-            console.error('خطا در ایجاد پروفایل:', createError);
+            if (import.meta.env.DEV) console.error('خطا در ایجاد پروفایل:', createError);
             toast({
               title: 'خطا در ایجاد پروفایل',
               description: 'لطفاً با مدیر سیستم تماس بگیرید',
@@ -137,7 +137,7 @@ const HSEManagementPanel = () => {
         if (!rolesError && roles && roles.length > 0) {
           role = roles[0].role;
         } else {
-          console.warn('نقش کاربر یافت نشد، در حال تخصیص نقش پیش‌فرض...');
+          if (import.meta.env.DEV) console.warn('نقش کاربر یافت نشد، در حال تخصیص نقش پیش‌فرض...');
           
           await supabase
             .from('user_roles')
@@ -158,7 +158,7 @@ const HSEManagementPanel = () => {
         setUserRole(role);
         
       } catch (error) {
-        console.error('خطای غیرمنتظره:', error);
+        if (import.meta.env.DEV) console.error('خطای غیرمنتظره:', error);
         toast({
           title: 'خطا در بارگذاری اطلاعات',
           description: 'لطفاً صفحه را رفرش کنید',

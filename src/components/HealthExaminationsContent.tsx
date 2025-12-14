@@ -115,7 +115,7 @@ const HealthExaminationsContent = () => {
       if (error) throw error;
       setExaminations((data as HealthExamination[]) || []);
     } catch (error) {
-      console.error('Error fetching examinations:', error);
+      if (import.meta.env.DEV) console.error('Error fetching examinations:', error);
       toast({
         title: 'خطا در بارگذاری داده‌ها',
         description: 'امکان بارگذاری معاینات وجود ندارد',
@@ -185,7 +185,7 @@ const HealthExaminationsContent = () => {
       resetForm();
       fetchExaminations();
     } catch (error) {
-      console.error('Error saving examination:', error);
+      if (import.meta.env.DEV) console.error('Error saving examination:', error);
       toast({
         title: 'خطا در ذخیره',
         description: 'امکان ذخیره معاینه وجود ندارد',
