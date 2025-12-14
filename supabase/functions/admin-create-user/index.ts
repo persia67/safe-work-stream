@@ -120,6 +120,16 @@ serve(async (req) => {
 
     if (createError) {
       console.error('Error creating user:', createError);
+      
+      // Handle specific error cases with user-friendly messages
+      if (createError.message?.includes('already been registered') || createError.code === 'email_exists') {
+        return new Response(JSON.stringify({ 
+          error: 'کاربری با این ایمیل قبلاً ثبت شده است. لطفاً ایمیل دیگری وارد کنید.' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       return new Response(JSON.stringify({ error: createError.message }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
