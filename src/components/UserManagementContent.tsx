@@ -15,15 +15,15 @@ import { z } from 'zod';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
-// Input validation schema for user invitations
-const userInviteSchema = z.object({
-  email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+// Input validation schema for user registration
+const userRegisterSchema = z.object({
+  email: z.string().trim().email('ایمیل نامعتبر است').max(255, 'ایمیل بیش از حد طولانی است'),
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(100, 'Password must be less than 100 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
-  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters'),
-  department: z.string().trim().max(100, 'Department must be less than 100 characters').optional(),
+    .min(6, 'رمز عبور باید حداقل ۶ کاراکتر باشد')
+    .max(100, 'رمز عبور بیش از حد طولانی است'),
+  name: z.string().trim().min(2, 'نام باید حداقل ۲ کاراکتر باشد').max(100, 'نام بیش از حد طولانی است'),
+  department: z.string().trim().max(100, 'نام بخش بیش از حد طولانی است').optional(),
+  phone: z.string().trim().max(20, 'شماره تلفن بیش از حد طولانی است').optional(),
   role: z.enum(['developer', 'admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'viewer'])
 });
 
@@ -53,13 +53,14 @@ export default function UserManagementContent() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   
-  // Invite form state
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [invitePassword, setInvitePassword] = useState('');
-  const [inviteName, setInviteName] = useState('');
-  const [inviteDepartment, setInviteDepartment] = useState('');
-  const [inviteRole, setInviteRole] = useState<AppRole>('viewer');
-  const [inviteLoading, setInviteLoading] = useState(false);
+  // Register form state
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerDepartment, setRegisterDepartment] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
+  const [registerRole, setRegisterRole] = useState<AppRole>('viewer');
+  const [registerLoading, setRegisterLoading] = useState(false);
 
   const roles: { value: AppRole; label: { fa: string; en: string } }[] = [
     { value: 'developer', label: { fa: 'توسعه‌دهنده', en: 'Developer' } },
@@ -73,25 +74,28 @@ export default function UserManagementContent() {
 
   const translations = {
     title: { fa: 'مدیریت کاربران', en: 'User Management' },
-    inviteUser: { fa: 'دعوت کاربر جدید', en: 'Invite New User' },
-    email: { fa: 'ایمیل', en: 'Email' },
+    registerUser: { fa: 'ثبت کاربر جدید', en: 'Register New User' },
+    email: { fa: 'ایمیل (نام کاربری)', en: 'Email (Username)' },
     password: { fa: 'رمز عبور', en: 'Password' },
-    name: { fa: 'نام', en: 'Name' },
+    name: { fa: 'نام و نام خانوادگی', en: 'Full Name' },
     department: { fa: 'بخش', en: 'Department' },
+    phone: { fa: 'شماره تلفن', en: 'Phone' },
     role: { fa: 'نقش', en: 'Role' },
     actions: { fa: 'عملیات', en: 'Actions' },
     active: { fa: 'فعال', en: 'Active' },
     inactive: { fa: 'غیرفعال', en: 'Inactive' },
-    invite: { fa: 'دعوت', en: 'Invite' },
+    register: { fa: 'ثبت کاربر', en: 'Register' },
     cancel: { fa: 'انصراف', en: 'Cancel' },
     edit: { fa: 'ویرایش', en: 'Edit' },
     delete: { fa: 'حذف', en: 'Delete' },
     save: { fa: 'ذخیره', en: 'Save' },
     editUser: { fa: 'ویرایش کاربر', en: 'Edit User' },
-    inviteSuccess: { fa: 'کاربر با موفقیت دعوت شد', en: 'User invited successfully' },
+    registerSuccess: { fa: 'کاربر با موفقیت ثبت شد', en: 'User registered successfully' },
     updateSuccess: { fa: 'کاربر با موفقیت به‌روزرسانی شد', en: 'User updated successfully' },
     deleteSuccess: { fa: 'کاربر با موفقیت حذف شد', en: 'User deleted successfully' },
     error: { fa: 'خطا در عملیات', en: 'Operation failed' },
+    passwordHint: { fa: 'حداقل ۶ کاراکتر', en: 'At least 6 characters' },
+    userCanLogin: { fa: 'کاربر می‌تواند با این ایمیل و رمز عبور وارد شود', en: 'User can login with this email and password' },
   };
 
   const t = (key: keyof typeof translations) => translations[key][language];
@@ -137,14 +141,15 @@ export default function UserManagementContent() {
     }
   };
 
-  const handleInviteUser = async () => {
+  const handleRegisterUser = async () => {
     // Validate input using Zod schema
-    const validationResult = userInviteSchema.safeParse({
-      email: inviteEmail,
-      password: invitePassword,
-      name: inviteName,
-      department: inviteDepartment || undefined,
-      role: inviteRole
+    const validationResult = userRegisterSchema.safeParse({
+      email: registerEmail,
+      password: registerPassword,
+      name: registerName,
+      department: registerDepartment || undefined,
+      phone: registerPhone || undefined,
+      role: registerRole
     });
 
     if (!validationResult.success) {
@@ -158,65 +163,62 @@ export default function UserManagementContent() {
     }
 
     try {
-      setInviteLoading(true);
+      setRegisterLoading(true);
 
-      // Use validated data
       const validatedData = validationResult.data;
 
-      // Create user via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: validatedData.email,
-        password: validatedData.password,
-        options: {
-          data: {
-            name: validatedData.name,
+      // Get current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: t('error'),
+          description: 'لطفا دوباره وارد شوید',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Call Edge Function to create user with admin privileges
+      const response = await fetch(
+        `https://thaghdaioherrbiyjpnf.supabase.co/functions/v1/admin-create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
-
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Update profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .update({
+          body: JSON.stringify({
+            email: validatedData.email,
+            password: validatedData.password,
             name: validatedData.name,
             department: validatedData.department || null,
-          })
-          .eq('user_id', authData.user.id);
-
-        if (profileError) throw profileError;
-
-        // Delete default viewer role
-        await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', authData.user.id);
-
-        // Assign selected role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: authData.user.id,
+            phone: validatedData.phone || null,
             role: validatedData.role,
-          });
+          }),
+        }
+      );
 
-        if (roleError) throw roleError;
+      const result = await response.json();
 
-        toast({
-          title: t('inviteSuccess'),
-        });
-
-        setInviteDialogOpen(false);
-        setInviteEmail('');
-        setInvitePassword('');
-        setInviteName('');
-        setInviteDepartment('');
-        setInviteRole('viewer');
-        fetchUsers();
+      if (!response.ok) {
+        throw new Error(result.error || 'خطا در ثبت کاربر');
       }
+
+      toast({
+        title: t('registerSuccess'),
+        description: language === 'fa' 
+          ? `کاربر ${validatedData.name} با موفقیت ثبت شد. اکنون می‌تواند با ایمیل و رمز عبور وارد شود.`
+          : `User ${validatedData.name} registered successfully. They can now login with email and password.`,
+      });
+
+      setInviteDialogOpen(false);
+      setRegisterEmail('');
+      setRegisterPassword('');
+      setRegisterName('');
+      setRegisterDepartment('');
+      setRegisterPhone('');
+      setRegisterRole('viewer');
+      fetchUsers();
     } catch (error: any) {
       toast({
         title: t('error'),
@@ -224,7 +226,7 @@ export default function UserManagementContent() {
         variant: 'destructive',
       });
     } finally {
-      setInviteLoading(false);
+      setRegisterLoading(false);
     }
   };
 
@@ -338,21 +340,26 @@ export default function UserManagementContent() {
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />
-              {t('inviteUser')}
+              {t('registerUser')}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{t('inviteUser')}</DialogTitle>
+              <DialogTitle>{t('registerUser')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
+              <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                {t('userCanLogin')}
+              </div>
               <div>
                 <Label htmlFor="email">{t('email')} *</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  dir="ltr"
                 />
               </div>
               <div>
@@ -360,29 +367,53 @@ export default function UserManagementContent() {
                 <Input
                   id="password"
                   type="password"
-                  value={invitePassword}
-                  onChange={(e) => setInvitePassword(e.target.value)}
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  dir="ltr"
                 />
+                <p className="text-xs text-muted-foreground mt-1">{t('passwordHint')}</p>
               </div>
               <div>
                 <Label htmlFor="name">{t('name')} *</Label>
                 <Input
                   id="name"
-                  value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">{t('phone')}</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={registerPhone}
+                  onChange={(e) => setRegisterPhone(e.target.value)}
+                  placeholder="09123456789"
+                  dir="ltr"
                 />
               </div>
               <div>
                 <Label htmlFor="department">{t('department')}</Label>
-                <Input
-                  id="department"
-                  value={inviteDepartment}
-                  onChange={(e) => setInviteDepartment(e.target.value)}
-                />
+                <Select value={registerDepartment} onValueChange={setRegisterDepartment}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'fa' ? 'انتخاب بخش' : 'Select Department'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
+                    <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
+                    <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
+                    <SelectItem value="جوشکاری">جوشکاری</SelectItem>
+                    <SelectItem value="شیت کن">شیت کن</SelectItem>
+                    <SelectItem value="تاسیسات">تاسیسات</SelectItem>
+                    <SelectItem value="تعمیرات">تعمیرات</SelectItem>
+                    <SelectItem value="اداری">اداری</SelectItem>
+                    <SelectItem value="HSE">HSE</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="role">{t('role')} *</Label>
-                <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as AppRole)}>
+                <Select value={registerRole} onValueChange={(value) => setRegisterRole(value as AppRole)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -395,13 +426,13 @@ export default function UserManagementContent() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2 justify-end">
+              <div className="flex gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
                   {t('cancel')}
                 </Button>
-                <Button onClick={handleInviteUser} disabled={inviteLoading}>
-                  {inviteLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {t('invite')}
+                <Button onClick={handleRegisterUser} disabled={registerLoading}>
+                  {registerLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {t('register')}
                 </Button>
               </div>
             </div>
