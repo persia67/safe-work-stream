@@ -346,6 +346,368 @@ export type Database = {
           },
         ]
       }
+      occupational_health_records: {
+        Row: {
+          absence_details: string | null
+          accident_details: string | null
+          ai_analysis: Json | null
+          allergy_details: string | null
+          audiometry_date: string | null
+          audiometry_interpretation: string | null
+          audiometry_results: Json | null
+          biological_hazards: Json | null
+          birth_year: string | null
+          blood_pressure_diastolic: number | null
+          blood_pressure_systolic: number | null
+          bmi: number | null
+          cardiovascular_signs: Json | null
+          cardiovascular_symptoms: Json | null
+          chemical_hazards: Json | null
+          children_count: number | null
+          color_vision_left: string | null
+          color_vision_right: string | null
+          commission_details: string | null
+          consultations: Json | null
+          coworkers_have_similar_symptoms: boolean | null
+          created_at: string
+          created_by: string | null
+          current_jobs: Json | null
+          current_medications: boolean | null
+          currently_smoking: boolean | null
+          cxr_date: string | null
+          cxr_findings: string | null
+          depth_perception: string | null
+          ecg_date: string | null
+          ecg_findings: string | null
+          employee_id: string
+          employee_name: string
+          ent_symptoms: Json | null
+          ergonomic_hazards: Json | null
+          examination_date: string
+          examination_type: string
+          examiner_name: string | null
+          exercise_details: string | null
+          eye_symptoms: Json | null
+          family_chronic_disease_cancer: boolean | null
+          family_disease_details: string | null
+          father_name: string | null
+          final_opinion_date: string | null
+          final_opinion_physician: string | null
+          fitness_conditions: string | null
+          fitness_status: string
+          gender: string
+          general_symptoms: Json | null
+          gi_signs: Json | null
+          gi_symptoms: Json | null
+          has_allergies: boolean | null
+          has_prior_illness: boolean | null
+          health_risk_score: number | null
+          height_cm: number | null
+          hospitalization_details: string | null
+          hospitalization_history: boolean | null
+          id: string
+          illness_worsens_with_environment_change: boolean | null
+          industrial_area_details: string | null
+          lab_tests: Json | null
+          lives_near_industrial_area: boolean | null
+          marital_status: string | null
+          medical_commission_referral: boolean | null
+          medical_exemption: boolean | null
+          medical_exemption_reason: string | null
+          medical_recommendations: string | null
+          medication_details: string | null
+          military_service_type: string | null
+          military_status: string | null
+          musculoskeletal_signs: Json | null
+          musculoskeletal_symptoms: Json | null
+          national_code: string | null
+          neck_symptoms: Json | null
+          neurological_signs: Json | null
+          neurological_symptoms: Json | null
+          occupational_accident_history: boolean | null
+          occupational_health_code: string | null
+          organization_id: string | null
+          other_imaging: string | null
+          physical_hazards: Json | null
+          previous_jobs: Json | null
+          previous_smoking: boolean | null
+          psychological_hazards: Json | null
+          psychological_signs: Json | null
+          psychological_symptoms: Json | null
+          pulse_rate: number | null
+          regular_exercise: boolean | null
+          respiratory_signs: Json | null
+          respiratory_symptoms: Json | null
+          skin_symptoms: Json | null
+          smoking_details: string | null
+          specialized_tests: Json | null
+          spirometry_date: string | null
+          spirometry_interpretation: string | null
+          spirometry_results: Json | null
+          surgery_details: string | null
+          surgery_history: boolean | null
+          symptoms_improve_on_leave: boolean | null
+          unfitness_reasons: string | null
+          updated_at: string
+          urinary_signs: Json | null
+          urinary_symptoms: Json | null
+          vaccination_records: Json | null
+          vision_acuity_left: string | null
+          vision_acuity_left_corrected: string | null
+          vision_acuity_right: string | null
+          vision_acuity_right_corrected: string | null
+          vision_test_date: string | null
+          visual_field_left: string | null
+          visual_field_right: string | null
+          weight_kg: number | null
+          work_absence_due_illness: boolean | null
+          work_address: string | null
+          work_phone: string | null
+        }
+        Insert: {
+          absence_details?: string | null
+          accident_details?: string | null
+          ai_analysis?: Json | null
+          allergy_details?: string | null
+          audiometry_date?: string | null
+          audiometry_interpretation?: string | null
+          audiometry_results?: Json | null
+          biological_hazards?: Json | null
+          birth_year?: string | null
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          bmi?: number | null
+          cardiovascular_signs?: Json | null
+          cardiovascular_symptoms?: Json | null
+          chemical_hazards?: Json | null
+          children_count?: number | null
+          color_vision_left?: string | null
+          color_vision_right?: string | null
+          commission_details?: string | null
+          consultations?: Json | null
+          coworkers_have_similar_symptoms?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          current_jobs?: Json | null
+          current_medications?: boolean | null
+          currently_smoking?: boolean | null
+          cxr_date?: string | null
+          cxr_findings?: string | null
+          depth_perception?: string | null
+          ecg_date?: string | null
+          ecg_findings?: string | null
+          employee_id: string
+          employee_name: string
+          ent_symptoms?: Json | null
+          ergonomic_hazards?: Json | null
+          examination_date?: string
+          examination_type?: string
+          examiner_name?: string | null
+          exercise_details?: string | null
+          eye_symptoms?: Json | null
+          family_chronic_disease_cancer?: boolean | null
+          family_disease_details?: string | null
+          father_name?: string | null
+          final_opinion_date?: string | null
+          final_opinion_physician?: string | null
+          fitness_conditions?: string | null
+          fitness_status?: string
+          gender?: string
+          general_symptoms?: Json | null
+          gi_signs?: Json | null
+          gi_symptoms?: Json | null
+          has_allergies?: boolean | null
+          has_prior_illness?: boolean | null
+          health_risk_score?: number | null
+          height_cm?: number | null
+          hospitalization_details?: string | null
+          hospitalization_history?: boolean | null
+          id?: string
+          illness_worsens_with_environment_change?: boolean | null
+          industrial_area_details?: string | null
+          lab_tests?: Json | null
+          lives_near_industrial_area?: boolean | null
+          marital_status?: string | null
+          medical_commission_referral?: boolean | null
+          medical_exemption?: boolean | null
+          medical_exemption_reason?: string | null
+          medical_recommendations?: string | null
+          medication_details?: string | null
+          military_service_type?: string | null
+          military_status?: string | null
+          musculoskeletal_signs?: Json | null
+          musculoskeletal_symptoms?: Json | null
+          national_code?: string | null
+          neck_symptoms?: Json | null
+          neurological_signs?: Json | null
+          neurological_symptoms?: Json | null
+          occupational_accident_history?: boolean | null
+          occupational_health_code?: string | null
+          organization_id?: string | null
+          other_imaging?: string | null
+          physical_hazards?: Json | null
+          previous_jobs?: Json | null
+          previous_smoking?: boolean | null
+          psychological_hazards?: Json | null
+          psychological_signs?: Json | null
+          psychological_symptoms?: Json | null
+          pulse_rate?: number | null
+          regular_exercise?: boolean | null
+          respiratory_signs?: Json | null
+          respiratory_symptoms?: Json | null
+          skin_symptoms?: Json | null
+          smoking_details?: string | null
+          specialized_tests?: Json | null
+          spirometry_date?: string | null
+          spirometry_interpretation?: string | null
+          spirometry_results?: Json | null
+          surgery_details?: string | null
+          surgery_history?: boolean | null
+          symptoms_improve_on_leave?: boolean | null
+          unfitness_reasons?: string | null
+          updated_at?: string
+          urinary_signs?: Json | null
+          urinary_symptoms?: Json | null
+          vaccination_records?: Json | null
+          vision_acuity_left?: string | null
+          vision_acuity_left_corrected?: string | null
+          vision_acuity_right?: string | null
+          vision_acuity_right_corrected?: string | null
+          vision_test_date?: string | null
+          visual_field_left?: string | null
+          visual_field_right?: string | null
+          weight_kg?: number | null
+          work_absence_due_illness?: boolean | null
+          work_address?: string | null
+          work_phone?: string | null
+        }
+        Update: {
+          absence_details?: string | null
+          accident_details?: string | null
+          ai_analysis?: Json | null
+          allergy_details?: string | null
+          audiometry_date?: string | null
+          audiometry_interpretation?: string | null
+          audiometry_results?: Json | null
+          biological_hazards?: Json | null
+          birth_year?: string | null
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          bmi?: number | null
+          cardiovascular_signs?: Json | null
+          cardiovascular_symptoms?: Json | null
+          chemical_hazards?: Json | null
+          children_count?: number | null
+          color_vision_left?: string | null
+          color_vision_right?: string | null
+          commission_details?: string | null
+          consultations?: Json | null
+          coworkers_have_similar_symptoms?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          current_jobs?: Json | null
+          current_medications?: boolean | null
+          currently_smoking?: boolean | null
+          cxr_date?: string | null
+          cxr_findings?: string | null
+          depth_perception?: string | null
+          ecg_date?: string | null
+          ecg_findings?: string | null
+          employee_id?: string
+          employee_name?: string
+          ent_symptoms?: Json | null
+          ergonomic_hazards?: Json | null
+          examination_date?: string
+          examination_type?: string
+          examiner_name?: string | null
+          exercise_details?: string | null
+          eye_symptoms?: Json | null
+          family_chronic_disease_cancer?: boolean | null
+          family_disease_details?: string | null
+          father_name?: string | null
+          final_opinion_date?: string | null
+          final_opinion_physician?: string | null
+          fitness_conditions?: string | null
+          fitness_status?: string
+          gender?: string
+          general_symptoms?: Json | null
+          gi_signs?: Json | null
+          gi_symptoms?: Json | null
+          has_allergies?: boolean | null
+          has_prior_illness?: boolean | null
+          health_risk_score?: number | null
+          height_cm?: number | null
+          hospitalization_details?: string | null
+          hospitalization_history?: boolean | null
+          id?: string
+          illness_worsens_with_environment_change?: boolean | null
+          industrial_area_details?: string | null
+          lab_tests?: Json | null
+          lives_near_industrial_area?: boolean | null
+          marital_status?: string | null
+          medical_commission_referral?: boolean | null
+          medical_exemption?: boolean | null
+          medical_exemption_reason?: string | null
+          medical_recommendations?: string | null
+          medication_details?: string | null
+          military_service_type?: string | null
+          military_status?: string | null
+          musculoskeletal_signs?: Json | null
+          musculoskeletal_symptoms?: Json | null
+          national_code?: string | null
+          neck_symptoms?: Json | null
+          neurological_signs?: Json | null
+          neurological_symptoms?: Json | null
+          occupational_accident_history?: boolean | null
+          occupational_health_code?: string | null
+          organization_id?: string | null
+          other_imaging?: string | null
+          physical_hazards?: Json | null
+          previous_jobs?: Json | null
+          previous_smoking?: boolean | null
+          psychological_hazards?: Json | null
+          psychological_signs?: Json | null
+          psychological_symptoms?: Json | null
+          pulse_rate?: number | null
+          regular_exercise?: boolean | null
+          respiratory_signs?: Json | null
+          respiratory_symptoms?: Json | null
+          skin_symptoms?: Json | null
+          smoking_details?: string | null
+          specialized_tests?: Json | null
+          spirometry_date?: string | null
+          spirometry_interpretation?: string | null
+          spirometry_results?: Json | null
+          surgery_details?: string | null
+          surgery_history?: boolean | null
+          symptoms_improve_on_leave?: boolean | null
+          unfitness_reasons?: string | null
+          updated_at?: string
+          urinary_signs?: Json | null
+          urinary_symptoms?: Json | null
+          vaccination_records?: Json | null
+          vision_acuity_left?: string | null
+          vision_acuity_left_corrected?: string | null
+          vision_acuity_right?: string | null
+          vision_acuity_right_corrected?: string | null
+          vision_test_date?: string | null
+          visual_field_left?: string | null
+          visual_field_right?: string | null
+          weight_kg?: number | null
+          work_absence_due_illness?: boolean | null
+          work_address?: string | null
+          work_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occupational_health_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           active: boolean | null
