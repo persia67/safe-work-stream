@@ -45,15 +45,22 @@ import {
   Cloud
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import HealthExaminationsContent from './HealthExaminationsContent';
-import EditableSettingsContent from './EditableSettingsContent';
-import { SafetyTrainingContent } from './SafetyTrainingContent';
-import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
-import { HSEAIChat } from './HSEAIChat';
-import UserManagementContent from './UserManagementContent';
 
-// Lazy load ThemeLanguageToggle to reduce critical request chain
+// Lazy load heavy tab content components to reduce initial bundle size
+const HealthExaminationsContent = lazy(() => import('./HealthExaminationsContent'));
+const EditableSettingsContent = lazy(() => import('./EditableSettingsContent'));
+const SafetyTrainingContent = lazy(() => import('./SafetyTrainingContent').then(m => ({ default: m.SafetyTrainingContent })));
+const EnhancedRiskAssessmentContent = lazy(() => import('./EnhancedRiskAssessmentContent').then(m => ({ default: m.EnhancedRiskAssessmentContent })));
+const HSEAIChat = lazy(() => import('./HSEAIChat').then(m => ({ default: m.HSEAIChat })));
+const UserManagementContent = lazy(() => import('./UserManagementContent'));
 const ThemeLanguageToggle = lazy(() => import('./ThemeLanguageToggle').then(m => ({ default: m.ThemeLanguageToggle })));
+
+// Fallback loader for lazy components
+const TabLoader = () => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Button } from '@/components/ui/button';
@@ -1135,7 +1142,9 @@ const HSEManagementPanel = () => {
               />
             )}
             {activeTab === 'risk' && (
-              <EnhancedRiskAssessmentContent />
+              <Suspense fallback={<TabLoader />}>
+                <EnhancedRiskAssessmentContent />
+              </Suspense>
             )}
             {activeTab === 'users' && (
               <div className="text-center p-8">
@@ -1160,18 +1169,26 @@ const HSEManagementPanel = () => {
               />
             )}
             {activeTab === 'health-examinations' && (
-              <HealthExaminationsContent />
+              <Suspense fallback={<TabLoader />}>
+                <HealthExaminationsContent />
+              </Suspense>
             )}
             {activeTab === 'safety-training' && (
-              <SafetyTrainingContent />
+              <Suspense fallback={<TabLoader />}>
+                <SafetyTrainingContent />
+              </Suspense>
             )}
             {activeTab === 'user-management' && (
-              <UserManagementContent />
+              <Suspense fallback={<TabLoader />}>
+                <UserManagementContent />
+              </Suspense>
             )}
             {activeTab === 'settings' && (
-              <EditableSettingsContent 
-                currentUser={currentUser}
-              />
+              <Suspense fallback={<TabLoader />}>
+                <EditableSettingsContent 
+                  currentUser={currentUser}
+                />
+              </Suspense>
             )}
           </div>
         </div>
@@ -1272,19 +1289,21 @@ const HSEManagementPanel = () => {
       )}
       
       {/* AI Chat - Available on all pages */}
-      <HSEAIChat pageContext={
-        activeTab === 'dashboard' ? 'صفحه داشبورد - نمایش آمار و گزارش‌های کلی HSE' :
-        activeTab === 'work-permits' ? 'صفحه مجوزهای کار - مدیریت مجوزهای کار و ایمنی' :
-        activeTab === 'incidents' ? 'صفحه حوادث - ثبت و پیگیری حوادث' :
-        activeTab === 'daily-reports' ? 'صفحه گزارش‌های روزانه - ثبت گزارش‌های روزانه HSE' :
-        activeTab === 'risk-assessment' ? 'صفحه ارزیابی ریسک - انجام ارزیابی‌های ریسک' :
-        activeTab === 'personnel' ? 'صفحه پرسنل - مدیریت اطلاعات پرسنل' :
-        activeTab === 'training' ? 'صفحه آموزش - مدیریت دوره‌های آموزشی ایمنی' :
-        activeTab === 'health' ? 'صفحه معاینات سلامت - مدیریت معاینات پزشکی کارکنان' :
-        activeTab === 'ergonomic' ? 'صفحه ارزیابی ارگونومی - ارزیابی وضعیت ارگونومیکی' :
-        activeTab === 'settings' ? 'صفحه تنظیمات - تنظیمات سیستم' :
-        'صفحه اصلی سیستم مدیریت HSE'
-      } />
+      <Suspense fallback={null}>
+        <HSEAIChat pageContext={
+          activeTab === 'dashboard' ? 'صفحه داشبورد - نمایش آمار و گزارش‌های کلی HSE' :
+          activeTab === 'work-permits' ? 'صفحه مجوزهای کار - مدیریت مجوزهای کار و ایمنی' :
+          activeTab === 'incidents' ? 'صفحه حوادث - ثبت و پیگیری حوادث' :
+          activeTab === 'daily-reports' ? 'صفحه گزارش‌های روزانه - ثبت گزارش‌های روزانه HSE' :
+          activeTab === 'risk-assessment' ? 'صفحه ارزیابی ریسک - انجام ارزیابی‌های ریسک' :
+          activeTab === 'personnel' ? 'صفحه پرسنل - مدیریت اطلاعات پرسنل' :
+          activeTab === 'training' ? 'صفحه آموزش - مدیریت دوره‌های آموزشی ایمنی' :
+          activeTab === 'health' ? 'صفحه معاینات سلامت - مدیریت معاینات پزشکی کارکنان' :
+          activeTab === 'ergonomic' ? 'صفحه ارزیابی ارگونومی - ارزیابی وضعیت ارگونومیکی' :
+          activeTab === 'settings' ? 'صفحه تنظیمات - تنظیمات سیستم' :
+          'صفحه اصلی سیستم مدیریت HSE'
+        } />
+      </Suspense>
     </div>
   );
 };
