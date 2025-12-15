@@ -6,6 +6,60 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Error codes for generic error responses
+const ERROR_CODES = {
+  UNAUTHORIZED: { code: 'ERR_AUTH_001', message: 'عدم دسترسی' },
+  FORBIDDEN: { code: 'ERR_AUTH_002', message: 'دسترسی غیرمجاز' },
+  INVALID_INPUT: { code: 'ERR_INPUT_001', message: 'اطلاعات ورودی نامعتبر است' },
+  RATE_LIMITED: { code: 'ERR_RATE_001', message: 'تعداد درخواست‌ها بیش از حد مجاز است' },
+  SERVER_ERROR: { code: 'ERR_SRV_001', message: 'خطا در پردازش درخواست' },
+  AI_ERROR: { code: 'ERR_AI_001', message: 'خطا در ارتباط با سرویس هوش مصنوعی' },
+  CREDIT_ERROR: { code: 'ERR_AI_002', message: 'اعتبار تمام شده است' },
+};
+
+// Input validation and sanitization
+const MAX_MESSAGE_LENGTH = 4000;
+const MAX_MESSAGES = 50;
+const MAX_PAGE_CONTEXT_LENGTH = 8000;
+
+// Sanitize text input to prevent prompt injection
+function sanitizeInput(input: string, maxLength: number): string {
+  if (typeof input !== 'string') return '';
+  
+  return input
+    .trim()
+    .slice(0, maxLength)
+    // Remove control characters except newlines and tabs
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    // Normalize whitespace (preserve intentional newlines)
+    .replace(/[^\S\n]+/g, ' ');
+}
+
+// Validate message structure
+function validateMessages(messages: unknown): { valid: boolean; sanitized?: Array<{role: string; content: string}> } {
+  if (!Array.isArray(messages)) return { valid: false };
+  if (messages.length === 0 || messages.length > MAX_MESSAGES) return { valid: false };
+
+  const sanitized: Array<{role: string; content: string}> = [];
+  
+  for (const msg of messages) {
+    if (typeof msg !== 'object' || msg === null) return { valid: false };
+    
+    const { role, content } = msg as Record<string, unknown>;
+    
+    if (typeof role !== 'string' || typeof content !== 'string') return { valid: false };
+    if (!['user', 'assistant'].includes(role)) return { valid: false };
+    if (content.length === 0 || content.length > MAX_MESSAGE_LENGTH) return { valid: false };
+
+    sanitized.push({
+      role,
+      content: sanitizeInput(content, MAX_MESSAGE_LENGTH)
+    });
+  }
+
+  return { valid: true, sanitized };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -15,7 +69,7 @@ serve(async (req) => {
     // Verify JWT authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: ERROR_CODES.UNAUTHORIZED.message, code: ERROR_CODES.UNAUTHORIZED.code }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -36,14 +90,12 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication failed:', authError);
-      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+      console.error('Authentication failed');
+      return new Response(JSON.stringify({ error: ERROR_CODES.UNAUTHORIZED.message, code: ERROR_CODES.UNAUTHORIZED.code }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    console.log('Authenticated user:', user.id);
 
     // Authorization: Check user role
     const { data: roleData, error: roleError } = await supabaseClient
@@ -53,8 +105,8 @@ serve(async (req) => {
       .single();
 
     if (roleError || !roleData) {
-      console.error('Role check failed:', roleError);
-      return new Response(JSON.stringify({ error: 'دسترسی غیرمجاز' }), {
+      console.error('Role check failed for user:', user.id);
+      return new Response(JSON.stringify({ error: ERROR_CODES.FORBIDDEN.message, code: ERROR_CODES.FORBIDDEN.code }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -63,19 +115,48 @@ serve(async (req) => {
     const allowedRoles = ['admin', 'senior_manager', 'developer', 'safety_officer', 'supervisor', 'medical_officer'];
     if (!allowedRoles.includes(roleData.role)) {
       console.log('User role not authorized:', roleData.role);
-      return new Response(JSON.stringify({ error: 'شما مجوز دسترسی به این قابلیت را ندارید' }), {
+      return new Response(JSON.stringify({ error: ERROR_CODES.FORBIDDEN.message, code: ERROR_CODES.FORBIDDEN.code }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('User authorized with role:', roleData.role);
+    // Parse request body
+    let requestData: Record<string, unknown>;
+    try {
+      requestData = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: ERROR_CODES.INVALID_INPUT.message, code: ERROR_CODES.INVALID_INPUT.code }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    const { messages, pageContext } = await req.json();
+    const { messages, pageContext } = requestData;
+    
+    // Validate and sanitize messages
+    const validation = validateMessages(messages);
+    if (!validation.valid || !validation.sanitized) {
+      return new Response(JSON.stringify({ error: ERROR_CODES.INVALID_INPUT.message, code: ERROR_CODES.INVALID_INPUT.code }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Sanitize pageContext if provided
+    let sanitizedPageContext: string | undefined;
+    if (pageContext && typeof pageContext === 'string') {
+      sanitizedPageContext = sanitizeInput(pageContext, MAX_PAGE_CONTEXT_LENGTH);
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error('LOVABLE_API_KEY not configured');
+      return new Response(JSON.stringify({ error: ERROR_CODES.SERVER_ERROR.message, code: ERROR_CODES.SERVER_ERROR.code }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const systemPrompt = `شما یک متخصص خبره در زمینه ایمنی و بهداشت حرفه‌ای (HSE - Health, Safety, and Environment) هستید. 
@@ -87,7 +168,7 @@ serve(async (req) => {
 - ارائه توصیه‌های کاربردی برای بهبود شرایط ایمنی
 - پاسخگویی به سوالات عمومی فراتر از حوزه HSE
 
-${pageContext ? `\n\nمحتوای صفحه فعلی کاربر:\n${pageContext}\n\nشما می‌توانید در پاسخ‌های خود به این محتوا اشاره کنید و راهنمایی‌های مرتبط ارائه دهید.` : ''}
+${sanitizedPageContext ? `\n\nمحتوای صفحه فعلی کاربر:\n${sanitizedPageContext}\n\nشما می‌توانید در پاسخ‌های خود به این محتوا اشاره کنید و راهنمایی‌های مرتبط ارائه دهید.` : ''}
 
 لطفاً پاسخ‌های خود را به زبان فارسی و به صورت واضح، حرفه‌ای و کاربردی ارائه دهید.`;
 
@@ -101,7 +182,7 @@ ${pageContext ? `\n\nمحتوای صفحه فعلی کاربر:\n${pageContext}\
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...validation.sanitized,
         ],
         stream: true,
       }),
@@ -109,20 +190,19 @@ ${pageContext ? `\n\nمحتوای صفحه فعلی کاربر:\n${pageContext}\
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "تعداد درخواست‌ها بیش از حد مجاز است. لطفاً کمی بعد تلاش کنید." }), {
+        return new Response(JSON.stringify({ error: ERROR_CODES.RATE_LIMITED.message, code: ERROR_CODES.RATE_LIMITED.code }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "اعتبار تمام شده است. لطفاً اعتبار خود را شارژ کنید." }), {
+        return new Response(JSON.stringify({ error: ERROR_CODES.CREDIT_ERROR.message, code: ERROR_CODES.CREDIT_ERROR.code }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "خطا در ارتباط با سرویس هوش مصنوعی" }), {
+      console.error("AI gateway error:", response.status);
+      return new Response(JSON.stringify({ error: ERROR_CODES.AI_ERROR.message, code: ERROR_CODES.AI_ERROR.code }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -132,10 +212,8 @@ ${pageContext ? `\n\nمحتوای صفحه فعلی کاربر:\n${pageContext}\
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
-    // Log detailed errors server-side only
-    console.error("Chat error:", e);
-    // Return generic error to client
-    return new Response(JSON.stringify({ error: "خطا در پردازش درخواست" }), {
+    console.error("Unexpected error in hse-ai-chat");
+    return new Response(JSON.stringify({ error: ERROR_CODES.SERVER_ERROR.message, code: ERROR_CODES.SERVER_ERROR.code }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
