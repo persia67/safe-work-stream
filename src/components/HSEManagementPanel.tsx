@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   Shield, 
   AlertTriangle, 
@@ -50,8 +50,10 @@ import EditableSettingsContent from './EditableSettingsContent';
 import { SafetyTrainingContent } from './SafetyTrainingContent';
 import { EnhancedRiskAssessmentContent } from './EnhancedRiskAssessmentContent';
 import { HSEAIChat } from './HSEAIChat';
-import { ThemeLanguageToggle } from './ThemeLanguageToggle';
 import UserManagementContent from './UserManagementContent';
+
+// Lazy load ThemeLanguageToggle to reduce critical request chain
+const ThemeLanguageToggle = lazy(() => import('./ThemeLanguageToggle').then(m => ({ default: m.ThemeLanguageToggle })));
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Button } from '@/components/ui/button';
@@ -1079,7 +1081,9 @@ const HSEManagementPanel = () => {
                   <span>{getTodayPersian()}</span>
                 </div>
                 
-                <ThemeLanguageToggle />
+                <Suspense fallback={<div className="w-24 h-9 bg-muted/50 rounded-md animate-pulse" />}>
+                  <ThemeLanguageToggle />
+                </Suspense>
                 
                 <Button size="sm" variant="outline" className="h-9 hover:shadow-medium transition-all hover:scale-105">
                   <Bell className="w-4 h-4" />
