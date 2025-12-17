@@ -206,13 +206,31 @@ export const SafetyTrainingContent = () => {
 
       // Get organization
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "خطا",
+          description: "لطفاً ابتدا وارد سیستم شوید",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('organization_id')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      const finalData = { ...dataToSave, organization_id: profile?.organization_id };
+      if (!profile?.organization_id) {
+        toast({
+          title: "خطا",
+          description: "سازمان شما تعریف نشده است. لطفاً با مدیر سیستم تماس بگیرید",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const finalData = { ...dataToSave, organization_id: profile.organization_id };
 
       if (navigator.onLine) {
         // Online save
