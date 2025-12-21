@@ -34,6 +34,12 @@ const userUpdateSchema = z.object({
   role: z.enum(['developer', 'admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'viewer'])
 });
 
+interface Organization {
+  id: string;
+  name: string;
+  code: string;
+}
+
 interface UserProfile {
   id: string;
   user_id: string;
@@ -42,12 +48,15 @@ interface UserProfile {
   department: string | null;
   active: boolean | null;
   role?: AppRole;
+  organization_id: string | null;
+  organization_name?: string;
 }
 
 export default function UserManagementContent() {
   const { toast } = useToast();
   const { language } = useLanguage();
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -60,6 +69,7 @@ export default function UserManagementContent() {
   const [registerDepartment, setRegisterDepartment] = useState('');
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerRole, setRegisterRole] = useState<AppRole>('viewer');
+  const [registerOrganization, setRegisterOrganization] = useState('');
   const [registerLoading, setRegisterLoading] = useState(false);
 
   const roles: { value: AppRole; label: { fa: string; en: string } }[] = [
@@ -81,6 +91,7 @@ export default function UserManagementContent() {
     department: { fa: 'بخش', en: 'Department' },
     phone: { fa: 'شماره تلفن', en: 'Phone' },
     role: { fa: 'نقش', en: 'Role' },
+    organization: { fa: 'سازمان', en: 'Organization' },
     actions: { fa: 'عملیات', en: 'Actions' },
     active: { fa: 'فعال', en: 'Active' },
     inactive: { fa: 'غیرفعال', en: 'Inactive' },
@@ -96,13 +107,31 @@ export default function UserManagementContent() {
     error: { fa: 'خطا در عملیات', en: 'Operation failed' },
     passwordHint: { fa: 'حداقل ۶ کاراکتر', en: 'At least 6 characters' },
     userCanLogin: { fa: 'کاربر می‌تواند با این ایمیل و رمز عبور وارد شود', en: 'User can login with this email and password' },
+    selectOrganization: { fa: 'انتخاب سازمان', en: 'Select Organization' },
+    noOrganization: { fa: 'بدون سازمان', en: 'No Organization' },
   };
 
   const t = (key: keyof typeof translations) => translations[key][language];
 
   useEffect(() => {
     fetchUsers();
+    fetchOrganizations();
   }, []);
+
+  const fetchOrganizations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id, name, code')
+        .eq('active', true)
+        .order('name');
+
+      if (error) throw error;
+      setOrganizations(data || []);
+    } catch (error: any) {
+      console.error('Error fetching organizations:', error.message);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -123,10 +152,18 @@ export default function UserManagementContent() {
 
       if (rolesError) throw rolesError;
 
-      // Merge profiles with roles
+      // Fetch organizations for mapping
+      const { data: orgs } = await supabase
+        .from('organizations')
+        .select('id, name');
+
+      const orgMap = new Map(orgs?.map(o => [o.id, o.name]) || []);
+
+      // Merge profiles with roles and organization names
       const usersWithRoles = profiles?.map(profile => ({
         ...profile,
-        role: userRoles?.find(r => r.user_id === profile.user_id)?.role || 'viewer' as AppRole
+        role: userRoles?.find(r => r.user_id === profile.user_id)?.role || 'viewer' as AppRole,
+        organization_name: profile.organization_id ? orgMap.get(profile.organization_id) : undefined
       })) || [];
 
       setUsers(usersWithRoles);
@@ -194,6 +231,7 @@ export default function UserManagementContent() {
             department: validatedData.department || null,
             phone: validatedData.phone || null,
             role: validatedData.role,
+            organization_id: registerOrganization || null,
           }),
         }
       );
@@ -218,6 +256,7 @@ export default function UserManagementContent() {
       setRegisterDepartment('');
       setRegisterPhone('');
       setRegisterRole('viewer');
+      setRegisterOrganization('');
       fetchUsers();
     } catch (error: any) {
       toast({
@@ -260,6 +299,7 @@ export default function UserManagementContent() {
           name: validatedData.name,
           department: validatedData.department,
           active: selectedUser.active,
+          organization_id: selectedUser.organization_id,
         })
         .eq('user_id', selectedUser.user_id);
 
@@ -426,6 +466,22 @@ export default function UserManagementContent() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="organization">{t('organization')}</Label>
+                <Select value={registerOrganization} onValueChange={setRegisterOrganization}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('selectOrganization')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">{t('noOrganization')}</SelectItem>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name} ({org.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
                   {t('cancel')}
@@ -440,12 +496,13 @@ export default function UserManagementContent() {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>{t('name')}</TableHead>
               <TableHead>{t('email')}</TableHead>
+              <TableHead>{t('organization')}</TableHead>
               <TableHead>{t('department')}</TableHead>
               <TableHead>{t('role')}</TableHead>
               <TableHead>{t('active')}</TableHead>
@@ -457,6 +514,7 @@ export default function UserManagementContent() {
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
+                <TableCell>{user.organization_name || '-'}</TableCell>
                 <TableCell>{user.department || '-'}</TableCell>
                 <TableCell>
                   <Badge variant="outline">
@@ -515,6 +573,25 @@ export default function UserManagementContent() {
                   value={selectedUser.department || ''}
                   onChange={(e) => setSelectedUser({ ...selectedUser, department: e.target.value })}
                 />
+              </div>
+              <div>
+                <Label>{t('organization')}</Label>
+                <Select
+                  value={selectedUser.organization_id || ''}
+                  onValueChange={(value) => setSelectedUser({ ...selectedUser, organization_id: value || null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('selectOrganization')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">{t('noOrganization')}</SelectItem>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name} ({org.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>{t('role')}</Label>
