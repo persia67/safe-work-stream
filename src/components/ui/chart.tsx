@@ -65,6 +65,43 @@ const ChartContainer = React.forwardRef<
 })
 ChartContainer.displayName = "Chart"
 
+// Validate and sanitize CSS color values to prevent XSS attacks
+const isValidCSSColor = (color: string): boolean => {
+  if (!color || typeof color !== 'string') return false
+  
+  // Sanitize: trim and limit length
+  const sanitized = color.trim().slice(0, 100)
+  
+  // Allow hex colors: #RGB, #RRGGBB, #RRGGBBAA
+  if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(sanitized)) return true
+  
+  // Allow rgb/rgba: rgb(0,0,0) or rgba(0,0,0,0.5)
+  if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+))?\s*\)$/.test(sanitized)) return true
+  
+  // Allow hsl/hsla: hsl(360, 100%, 50%) or hsla(360, 100%, 50%, 0.5)
+  if (/^hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*(,\s*(0|1|0?\.\d+))?\s*\)$/.test(sanitized)) return true
+  
+  // Allow CSS variable references: var(--something)
+  if (/^var\(--[a-zA-Z0-9-]+\)$/.test(sanitized)) return true
+  
+  // Allow named colors (basic web colors only)
+  const namedColors = [
+    'transparent', 'currentcolor', 'inherit',
+    'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink',
+    'gray', 'grey', 'cyan', 'magenta', 'lime', 'maroon', 'navy', 'olive', 'teal'
+  ]
+  if (namedColors.includes(sanitized.toLowerCase())) return true
+  
+  return false
+}
+
+// Sanitize CSS key names to prevent injection
+const sanitizeCSSKey = (key: string): string => {
+  if (!key || typeof key !== 'string') return ''
+  // Only allow alphanumeric characters, hyphens, and underscores
+  return key.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50)
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([_, config]) => config.theme || config.color
@@ -74,20 +111,29 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // Sanitize the chart ID to prevent selector injection
+  const sanitizedId = id.replace(/[^a-zA-Z0-9_-]/g, '')
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${sanitizedId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    const sanitizedKey = sanitizeCSSKey(key)
+    // Only include color if it passes validation
+    if (color && isValidCSSColor(color) && sanitizedKey) {
+      return `  --color-${sanitizedKey}: ${color};`
+    }
+    return null
   })
+  .filter(Boolean)
   .join("\n")}
 }
 `
