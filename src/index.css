@@ -4,9 +4,7 @@
 
 /* Persian Calendar DatePicker Styles */
 @import 'react-persian-calendar-date-picker/lib/DatePicker.css';
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap");
+/* Fonts loaded via preconnect in index.html for better performance */
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
