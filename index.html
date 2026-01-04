@@ -8,12 +8,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="HSE Manager" />
     
-    <!-- Preconnect to Supabase for faster API calls -->
+    <!-- Preconnect to external origins for faster loading -->
     <link rel="preconnect" href="https://thaghdaioherrbiyjpnf.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://thaghdaioherrbiyjpnf.supabase.co" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Preload critical fonts and reduce network chain -->
-    <link rel="modulepreload" href="/src/main.tsx" />
+    <!-- Load fonts with display=swap for non-blocking render -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" /></noscript>
     
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/placeholder.svg" />
