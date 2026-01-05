@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { healthExaminationSchema } from '@/lib/validation';
 import moment from 'moment-jalaali';
 import DatePicker from 'react-persian-calendar-date-picker';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,9 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Plus, Search, Eye, Edit, Trash2, TrendingUp, AlertTriangle, Activity, Brain, Calendar, User, Stethoscope, BarChart3, Target, CheckCircle } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, TrendingUp, AlertTriangle, Activity, Brain, Calendar, User, Stethoscope, BarChart3, Target, CheckCircle, FileText, ClipboardList, ArrowLeft, Building2 } from 'lucide-react';
 import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
+import OccupationalHealthRecordForm from './OccupationalHealthRecordForm';
 
 interface HealthExamination {
   id: string;
@@ -41,14 +44,34 @@ interface HealthExamination {
   created_by?: string | null;
 }
 
+interface OccupationalHealthRecord {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  examination_date: string;
+  examination_type: string;
+  fitness_status: string;
+  gender: string;
+  national_code?: string | null;
+  birth_year?: string | null;
+  examiner_name?: string | null;
+  created_at: string;
+  health_risk_score?: number | null;
+}
+
 const HealthExaminationsContent = () => {
   const [examinations, setExaminations] = useState<HealthExamination[]>([]);
+  const [occupationalRecords, setOccupationalRecords] = useState<OccupationalHealthRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingExam, setEditingExam] = useState<HealthExamination | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [isMedicalOfficer, setIsMedicalOfficer] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState('examinations');
+  const [showFullForm, setShowFullForm] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [occupationalSearchTerm, setOccupationalSearchTerm] = useState('');
   const { toast } = useToast();
 
   // Form state
@@ -74,6 +97,7 @@ const HealthExaminationsContent = () => {
 
   useEffect(() => {
     fetchExaminations();
+    fetchOccupationalRecords();
   }, []);
 
   const fetchExaminations = async () => {
@@ -123,6 +147,20 @@ const HealthExaminationsContent = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOccupationalRecords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('occupational_health_records')
+        .select('id, employee_id, employee_name, examination_date, examination_type, fitness_status, gender, national_code, birth_year, examiner_name, created_at, health_risk_score')
+        .order('examination_date', { ascending: false });
+
+      if (error) throw error;
+      setOccupationalRecords((data as OccupationalHealthRecord[]) || []);
+    } catch (error) {
+      if (import.meta.env.DEV) console.error('Error fetching occupational records:', error);
     }
   };
 
@@ -376,6 +414,48 @@ const HealthExaminationsContent = () => {
     exam.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredOccupationalRecords = occupationalRecords.filter(record =>
+    record.employee_name.toLowerCase().includes(occupationalSearchTerm.toLowerCase()) ||
+    record.employee_id.toLowerCase().includes(occupationalSearchTerm.toLowerCase()) ||
+    (record.national_code?.toLowerCase().includes(occupationalSearchTerm.toLowerCase()) ?? false)
+  );
+
+  // If viewing full form
+  if (showFullForm) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => {
+            setShowFullForm(false);
+            setSelectedRecord(null);
+          }}>
+            <ArrowLeft className="w-4 h-4 ml-2" />
+            بازگشت به لیست
+          </Button>
+          <h2 className="text-lg font-semibold">
+            {selectedRecord ? 'ویرایش پرونده سلامت شغلی' : 'ثبت پرونده سلامت شغلی جدید'}
+          </h2>
+        </div>
+        <OccupationalHealthRecordForm
+          existingRecord={selectedRecord}
+          onSave={() => {
+            setShowFullForm(false);
+            setSelectedRecord(null);
+            fetchOccupationalRecords();
+            toast({
+              title: 'موفقیت',
+              description: 'پرونده سلامت شغلی ذخیره شد'
+            });
+          }}
+          onCancel={() => {
+            setShowFullForm(false);
+            setSelectedRecord(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   if (loading) {
     return <div className="p-6">در حال بارگذاری...</div>;
   }
@@ -383,152 +463,170 @@ const HealthExaminationsContent = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Stethoscope className="w-8 h-8 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold text-primary">معاینات طب کار دوره‌ای</h1>
-            <p className="text-muted-foreground">مدیریت و تحلیل معاینات سلامت پرسنل</p>
+            <h1 className="text-2xl font-bold text-primary">معاینات طب کار</h1>
+            <p className="text-muted-foreground">مدیریت پرونده‌های سلامت شغلی بر اساس فرم وزارت بهداشت</p>
           </div>
         </div>
-        <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="gap-2">
-              <Plus className="w-4 h-4" />
-              معاینه جدید
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingExam ? 'ویرایش معاینه' : 'معاینه جدید'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div>
-                  <Label>نام کارمند</Label>
-                  <Input
-                    value={formData.employee_name}
-                    onChange={(e) => setFormData({...formData, employee_name: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>کد پرسنلی</Label>
-                  <Input
-                    value={formData.employee_id}
-                    onChange={(e) => setFormData({...formData, employee_id: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>بخش</Label>
-                  <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="انتخاب بخش" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
-                      <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
-                      <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
-                      <SelectItem value="جوشکاری">جوشکاری</SelectItem>
-                      <SelectItem value="شیت کن">شیت کن</SelectItem>
-                      <SelectItem value="تاسیسات">تاسیسات</SelectItem>
-                      <SelectItem value="تعمیرات">تعمیرات</SelectItem>
-                      <SelectItem value="اداری">اداری</SelectItem>
-                      <SelectItem value="HSE">HSE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>سمت</Label>
-                  <Input
-                    value={formData.position}
-                    onChange={(e) => setFormData({...formData, position: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>نام پزشک معاینه‌کننده</Label>
-                  <Input
-                    value={formData.examiner_name}
-                    onChange={(e) => setFormData({...formData, examiner_name: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Sensitive health data - only visible to medical officers */}
-                {isMedicalOfficer && (
-                  <>
+      </div>
+
+      {/* Main Tabs */}
+      <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="examinations" className="gap-2">
+            <ClipboardList className="w-4 h-4" />
+            معاینات ساده
+          </TabsTrigger>
+          <TabsTrigger value="occupational" className="gap-2">
+            <FileText className="w-4 h-4" />
+            پرونده‌های سلامت شغلی (فرم وزارتخانه)
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Simple Examinations Tab */}
+        <TabsContent value="examinations" className="space-y-6 mt-6">
+          <div className="flex justify-end">
+            <Dialog open={showModal} onOpenChange={setShowModal}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  معاینه جدید
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingExam ? 'ویرایش معاینه' : 'معاینه جدید'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
-                      <Label>نتیجه آزمایش شنوایی</Label>
-                      <Select value={formData.hearing_test_result} onValueChange={(value) => setFormData({...formData, hearing_test_result: value})}>
+                      <Label>نام کارمند</Label>
+                      <Input
+                        value={formData.employee_name}
+                        onChange={(e) => setFormData({...formData, employee_name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>کد پرسنلی</Label>
+                      <Input
+                        value={formData.employee_id}
+                        onChange={(e) => setFormData({...formData, employee_id: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>بخش</Label>
+                      <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
                         <SelectTrigger>
-                          <SelectValue placeholder="انتخاب نتیجه" />
+                          <SelectValue placeholder="انتخاب بخش" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="نرمال">نرمال</SelectItem>
-                          <SelectItem value="کاهش خفیف">کاهش خفیف</SelectItem>
-                          <SelectItem value="کاهش متوسط">کاهش متوسط</SelectItem>
-                          <SelectItem value="کاهش شدید">کاهش شدید</SelectItem>
+                          <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
+                          <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
+                          <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
+                          <SelectItem value="جوشکاری">جوشکاری</SelectItem>
+                          <SelectItem value="شیت کن">شیت کن</SelectItem>
+                          <SelectItem value="تاسیسات">تاسیسات</SelectItem>
+                          <SelectItem value="تعمیرات">تعمیرات</SelectItem>
+                          <SelectItem value="اداری">اداری</SelectItem>
+                          <SelectItem value="HSE">HSE</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>نتیجه آزمایش بینایی</Label>
+                      <Label>سمت</Label>
                       <Input
-                        value={formData.vision_test_result}
-                        onChange={(e) => setFormData({...formData, vision_test_result: e.target.value})}
+                        value={formData.position}
+                        onChange={(e) => setFormData({...formData, position: e.target.value})}
                       />
                     </div>
                     <div>
-                      <Label>فشار خون</Label>
+                      <Label>نام پزشک معاینه‌کننده</Label>
                       <Input
-                        value={formData.blood_pressure}
-                        onChange={(e) => setFormData({...formData, blood_pressure: e.target.value})}
+                        value={formData.examiner_name}
+                        onChange={(e) => setFormData({...formData, examiner_name: e.target.value})}
                       />
                     </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Sensitive health data - only visible to medical officers */}
+                    {isMedicalOfficer && (
+                      <>
+                        <div>
+                          <Label>نتیجه آزمایش شنوایی</Label>
+                          <Select value={formData.hearing_test_result} onValueChange={(value) => setFormData({...formData, hearing_test_result: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="انتخاب نتیجه" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="نرمال">نرمال</SelectItem>
+                              <SelectItem value="کاهش خفیف">کاهش خفیف</SelectItem>
+                              <SelectItem value="کاهش متوسط">کاهش متوسط</SelectItem>
+                              <SelectItem value="کاهش شدید">کاهش شدید</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>نتیجه آزمایش بینایی</Label>
+                          <Input
+                            value={formData.vision_test_result}
+                            onChange={(e) => setFormData({...formData, vision_test_result: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>فشار خون</Label>
+                          <Input
+                            value={formData.blood_pressure}
+                            onChange={(e) => setFormData({...formData, blood_pressure: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>وضعیت تنفسی</Label>
+                          <Input
+                            value={formData.respiratory_function}
+                            onChange={(e) => setFormData({...formData, respiratory_function: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>ارزیابی عضلانی-اسکلتی</Label>
+                          <Textarea
+                            value={formData.musculoskeletal_assessment}
+                            onChange={(e) => setFormData({...formData, musculoskeletal_assessment: e.target.value})}
+                          />
+                        </div>
+                      </>
+                    )}
                     <div>
-                      <Label>وضعیت تنفسی</Label>
-                      <Input
-                        value={formData.respiratory_function}
-                        onChange={(e) => setFormData({...formData, respiratory_function: e.target.value})}
-                      />
+                      <Label>آمادگی برای کار</Label>
+                      <Select value={formData.fitness_for_work} onValueChange={(value) => setFormData({...formData, fitness_for_work: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="مناسب">مناسب</SelectItem>
+                          <SelectItem value="مناسب با محدودیت">مناسب با محدودیت</SelectItem>
+                          <SelectItem value="نامناسب">نامناسب</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div>
-                      <Label>ارزیابی عضلانی-اسکلتی</Label>
-                      <Textarea
-                        value={formData.musculoskeletal_assessment}
-                        onChange={(e) => setFormData({...formData, musculoskeletal_assessment: e.target.value})}
-                      />
-                    </div>
-                  </>
-                )}
-                <div>
-                  <Label>آمادگی برای کار</Label>
-                  <Select value={formData.fitness_for_work} onValueChange={(value) => setFormData({...formData, fitness_for_work: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="مناسب">مناسب</SelectItem>
-                      <SelectItem value="مناسب با محدودیت">مناسب با محدودیت</SelectItem>
-                      <SelectItem value="نامناسب">نامناسب</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setShowModal(false)}>
-                انصراف
-              </Button>
-              <Button onClick={handleSave}>
-                ذخیره
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button variant="outline" onClick={() => setShowModal(false)}>
+                    انصراف
+                  </Button>
+                  <Button onClick={handleSave}>
+                    ذخیره
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
       {/* Analytics Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -860,6 +958,211 @@ const HealthExaminationsContent = () => {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* Occupational Health Records Tab - Full Ministry of Health Form */}
+        <TabsContent value="occupational" className="space-y-6 mt-6">
+          {/* Info Card */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-primary">فرم معاینات شغلی وزارت بهداشت ایران</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    این بخش شامل فرم کامل ۹ بخشی معاینات طب کار طبق دستورالعمل وزارت بهداشت است که شامل: مشخصات فردی، سوابق شغلی، عوامل زیان‌آور، سوابق پزشکی، معاینات، علائم بالینی، آزمایشات، پاراکلینیک و نظریه نهایی پزشک می‌باشد.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex justify-between items-center">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="جستجو بر اساس نام، کد پرسنلی یا کد ملی..."
+                value={occupationalSearchTerm}
+                onChange={(e) => setOccupationalSearchTerm(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+            <Button onClick={() => setShowFullForm(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              ثبت پرونده جدید
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">کل پرونده‌ها</p>
+                    <p className="text-2xl font-bold">{occupationalRecords.length}</p>
+                  </div>
+                  <FileText className="w-8 h-8 text-primary opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">مناسب</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {occupationalRecords.filter(r => r.fitness_status === 'مناسب').length}
+                    </p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-500 opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">با محدودیت</p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {occupationalRecords.filter(r => r.fitness_status === 'مناسب با شرایط').length}
+                    </p>
+                  </div>
+                  <AlertTriangle className="w-8 h-8 text-yellow-500 opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">نامناسب</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {occupationalRecords.filter(r => r.fitness_status === 'غیرمناسب').length}
+                    </p>
+                  </div>
+                  <AlertTriangle className="w-8 h-8 text-red-500 opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Records List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5" />
+                لیست پرونده‌های سلامت شغلی
+              </CardTitle>
+              <CardDescription>
+                پرونده‌های ثبت شده بر اساس فرم استاندارد وزارت بهداشت ایران
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/30">
+                    <tr>
+                      <th className="p-4 text-right">نام و نام خانوادگی</th>
+                      <th className="p-4 text-right">کد پرسنلی</th>
+                      <th className="p-4 text-right">کد ملی</th>
+                      <th className="p-4 text-right">جنسیت</th>
+                      <th className="p-4 text-right">نوع معاینه</th>
+                      <th className="p-4 text-right">تاریخ معاینه</th>
+                      <th className="p-4 text-right">وضعیت</th>
+                      <th className="p-4 text-right">عملیات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOccupationalRecords.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                          <div className="flex flex-col items-center gap-2">
+                            <FileText className="w-12 h-12 opacity-30" />
+                            <p>هیچ پرونده‌ای ثبت نشده است</p>
+                            <Button variant="outline" size="sm" onClick={() => setShowFullForm(true)}>
+                              ثبت اولین پرونده
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredOccupationalRecords.map((record) => (
+                        <tr key={record.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                          <td className="p-4">
+                            <div className="font-medium">{record.employee_name}</div>
+                          </td>
+                          <td className="p-4 text-sm">{record.employee_id}</td>
+                          <td className="p-4 text-sm">{record.national_code || '-'}</td>
+                          <td className="p-4">
+                            <Badge variant="outline">{record.gender}</Badge>
+                          </td>
+                          <td className="p-4">
+                            <Badge variant="secondary">{record.examination_type}</Badge>
+                          </td>
+                          <td className="p-4 text-sm">
+                            {formatPersianDate(record.examination_date)}
+                          </td>
+                          <td className="p-4">
+                            <Badge 
+                              variant={
+                                record.fitness_status === 'مناسب' ? 'default' :
+                                record.fitness_status === 'مناسب با شرایط' ? 'secondary' : 'destructive'
+                              }
+                            >
+                              {record.fitness_status}
+                            </Badge>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  // Fetch full record
+                                  const { data } = await supabase
+                                    .from('occupational_health_records')
+                                    .select('*')
+                                    .eq('id', record.id)
+                                    .single();
+                                  if (data) {
+                                    setSelectedRecord(data);
+                                    setShowFullForm(true);
+                                  }
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  const { data } = await supabase
+                                    .from('occupational_health_records')
+                                    .select('*')
+                                    .eq('id', record.id)
+                                    .single();
+                                  if (data) {
+                                    setSelectedRecord(data);
+                                    setShowFullForm(true);
+                                  }
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
