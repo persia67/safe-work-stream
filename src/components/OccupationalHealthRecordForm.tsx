@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,8 +15,9 @@ import { Separator } from '@/components/ui/separator';
 import { 
   User, Briefcase, AlertTriangle, FileText, Stethoscope, 
   FlaskConical, Eye, Ear, Activity, Brain, ClipboardCheck,
-  Save, ChevronRight, ChevronLeft, Heart, Bone, Wind
+  Save, ChevronRight, ChevronLeft, Heart, Bone, Wind, Printer
 } from 'lucide-react';
+import OccupationalHealthPrintView from './OccupationalHealthPrintView';
 
 interface OccupationalHealthRecordFormProps {
   employeeId?: string;
@@ -36,6 +37,16 @@ const OccupationalHealthRecordForm: React.FC<OccupationalHealthRecordFormProps> 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal');
   const [saving, setSaving] = useState(false);
+  const [showPrintView, setShowPrintView] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = () => {
+    setShowPrintView(true);
+    setTimeout(() => {
+      window.print();
+      setShowPrintView(false);
+    }, 100);
+  };
   
   // Form state
   const [formData, setFormData] = useState({
@@ -1621,6 +1632,10 @@ const OccupationalHealthRecordForm: React.FC<OccupationalHealthRecordFormProps> 
             </Button>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="w-4 h-4 ml-2" />
+              چاپ پرونده
+            </Button>
             {onCancel && (
               <Button variant="outline" onClick={onCancel}>
                 انصراف
@@ -1632,6 +1647,13 @@ const OccupationalHealthRecordForm: React.FC<OccupationalHealthRecordFormProps> 
             </Button>
           </div>
         </div>
+
+        {/* Print View (hidden, shown only when printing) */}
+        {showPrintView && (
+          <div className="fixed inset-0 bg-white z-[9999] overflow-auto print:relative print:inset-auto print:z-auto">
+            <OccupationalHealthPrintView ref={printRef} formData={formData} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
