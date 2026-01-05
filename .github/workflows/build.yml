@@ -1,46 +1,46 @@
-name: Build Safe Work Stream
+name: Desktop Build (Electron)
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ main, master ] # اجرا روی شاخه‌های اصلی
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  build-android:
-    name: Build Android APK
-    runs-on: ubuntu-latest
+  release:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Checkout Code
+      - name: Check out git repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          node-version: 20
+          cache: 'npm'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      
       - name: Install Dependencies
-        run: flutter pub get
+        run: npm install
 
-      - name: Build APK
-        run: flutter build apk --release
+      # اگر لازم باشد ابتدا React ساخته شود، این خط را فعال کنید:
+      # - name: Build React Frontend
+      #   run: npm run build 
 
-      - name: Sign Android Release
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: build/app/outputs/flutter-apk
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
+      - name: Build & Package Electron App
+        run: npm run dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # برای ساخت Release خودکار
 
-      - name: Upload Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          name: Executables-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.deb
+            dist/*.AppImage
