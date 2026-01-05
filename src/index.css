@@ -207,3 +207,34 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Styles for Occupational Health Record */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-container,
+  .print-container * {
+    visibility: visible;
+  }
+  
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Hide non-printable elements */
+  .no-print,
+  button,
+  nav,
+  header,
+  aside,
+  footer:not(.print-footer) {
+    display: none !important;
+  }
+}
