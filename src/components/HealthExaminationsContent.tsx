@@ -525,8 +525,10 @@ const HealthExaminationsContent = () => {
                           <SelectValue placeholder="انتخاب بخش" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="خط قدیم">خط قدیم</SelectItem>
+                          <SelectItem value="خط جدید">خط جدید</SelectItem>
+                          <SelectItem value="نورد سرد">نورد سرد</SelectItem>
                           <SelectItem value="اسیدشویی">اسیدشویی</SelectItem>
-                          <SelectItem value="گالوانیزه و وان مذاب و نورد سرد">گالوانیزه و وان مذاب و نورد سرد</SelectItem>
                           <SelectItem value="ماشین سازی">ماشین سازی</SelectItem>
                           <SelectItem value="جوشکاری">جوشکاری</SelectItem>
                           <SelectItem value="شیت کن">شیت کن</SelectItem>
