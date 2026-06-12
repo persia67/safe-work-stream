@@ -3,9 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { MessageCircle, X, Send, Loader2, Settings, WifiOff, Wifi, Cpu, Cloud } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { streamChat, getOfflineAISettings, saveOfflineAISettings, pingOllama, type OfflineAISettings } from '@/lib/offlineAI';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,8 +26,25 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [settings, setSettings] = useState<OfflineAISettings>(getOfflineAISettings());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [draftSettings, setDraftSettings] = useState<OfflineAISettings>(settings);
+  const [ollamaReachable, setOllamaReachable] = useState<boolean | null>(null);
+  const [lastSource, setLastSource] = useState<'ollama' | 'cloud' | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -30,118 +52,43 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
     }
   }, [messages]);
 
-  const streamChat = async (userMessage: string) => {
-    const CHAT_URL = `https://thaghdaioherrbiyjpnf.supabase.co/functions/v1/hse-ai-chat`;
-    
-    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
-    setMessages(newMessages);
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    const userMsg: Message = { role: 'user', content: input.trim() };
+    const next = [...messages, userMsg];
+    setMessages(next);
     setInput('');
     setIsLoading(true);
 
-    try {
-      // Get the session token for authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "خطا",
-          description: "لطفا ابتدا وارد سیستم شوید",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const resp = await fetch(CHAT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ 
-          messages: newMessages,
-          pageContext: pageContext 
-        }),
-      });
-
-      if (resp.status === 429 || resp.status === 402) {
-        const errorData = await resp.json();
-        toast({
-          title: "خطا",
-          description: errorData.error,
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (!resp.ok || !resp.body) {
-        throw new Error('Failed to start stream');
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-      let streamDone = false;
-      let assistantContent = '';
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === 'assistant') {
-                  return prev.map((m, i) => 
-                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                  );
-                }
-                return [...prev, { role: 'assistant', content: assistantContent }];
-              });
+    let assistant = '';
+    const result = await streamChat(
+      next.map((m) => ({ role: m.role, content: m.content })),
+      pageContext,
+      {
+        onSource: (s) => setLastSource(s),
+        onDelta: (chunk) => {
+          assistant += chunk;
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === 'assistant') {
+              return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m));
             }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
+            return [...prev, { role: 'assistant', content: assistant }];
+          });
+        },
       }
+    );
 
-      setIsLoading(false);
-    } catch (error) {
-      // Generic error message to user (don't expose details)
+    if (!result.ok) {
       toast({
-        title: "خطا",
-        description: "خطا در ارتباط با هوش مصنوعی",
-        variant: "destructive",
+        title: 'خطا',
+        description: navigator.onLine
+          ? 'پاسخی از سرویس هوش مصنوعی دریافت نشد. اتصال Ollama را بررسی کنید.'
+          : 'آفلاین هستید و هوش مصنوعی محلی پیکربندی نشده است.',
+        variant: 'destructive',
       });
-      setIsLoading(false);
     }
-  };
-
-  const handleSend = () => {
-    if (!input.trim() || isLoading) return;
-    streamChat(input);
+    setIsLoading(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -151,9 +98,27 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
     }
   };
 
+  const openSettings = async () => {
+    setDraftSettings(getOfflineAISettings());
+    setSettingsOpen(true);
+    setOllamaReachable(null);
+  };
+
+  const testOllama = async () => {
+    setOllamaReachable(null);
+    const ok = await pingOllama(draftSettings.endpoint);
+    setOllamaReachable(ok);
+  };
+
+  const saveSettings = () => {
+    saveOfflineAISettings(draftSettings);
+    setSettings(draftSettings);
+    setSettingsOpen(false);
+    toast({ title: 'تنظیمات ذخیره شد' });
+  };
+
   return (
     <>
-      {/* Floating Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 left-6 z-50 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
@@ -162,12 +127,82 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
         {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
       </Button>
 
-      {/* Chat Window */}
       {isOpen && (
         <Card className="fixed bottom-24 left-6 z-50 w-96 h-[500px] shadow-xl flex flex-col">
           <div className="bg-primary text-primary-foreground p-4 rounded-t-lg">
-            <h3 className="font-semibold text-lg">مشاور هوش مصنوعی HSE</h3>
-            <p className="text-xs opacity-90">متخصص ایمنی و بهداشت حرفه‌ای</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg">مشاور هوش مصنوعی HSE</h3>
+                <p className="text-xs opacity-90">متخصص ایمنی و بهداشت حرفه‌ای</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5">
+                  {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                  {isOnline ? 'آنلاین' : 'آفلاین'}
+                </Badge>
+                <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/20" onClick={openSettings}>
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl">
+                    <DialogHeader>
+                      <DialogTitle>تنظیمات هوش مصنوعی آفلاین</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="enabled">فعال‌سازی AI محلی (Ollama)</Label>
+                        <Switch
+                          id="enabled"
+                          checked={draftSettings.enabled}
+                          onCheckedChange={(v) => setDraftSettings({ ...draftSettings, enabled: v })}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="prefer">ترجیح آفلاین حتی در حالت آنلاین</Label>
+                        <Switch
+                          id="prefer"
+                          checked={draftSettings.preferOffline}
+                          onCheckedChange={(v) => setDraftSettings({ ...draftSettings, preferOffline: v })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="endpoint">آدرس Ollama</Label>
+                        <Input
+                          id="endpoint"
+                          value={draftSettings.endpoint}
+                          onChange={(e) => setDraftSettings({ ...draftSettings, endpoint: e.target.value })}
+                          placeholder="http://localhost:11434"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="model">نام مدل</Label>
+                        <Input
+                          id="model"
+                          value={draftSettings.model}
+                          onChange={(e) => setDraftSettings({ ...draftSettings, model: e.target.value })}
+                          placeholder="llama3.1"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={testOllama}>تست اتصال</Button>
+                        {ollamaReachable === true && <Badge variant="default" className="bg-green-600">متصل</Badge>}
+                        {ollamaReachable === false && <Badge variant="destructive">در دسترس نیست</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-6">
+                        برای استفاده از AI آفلاین، ابتدا <a href="https://ollama.com" target="_blank" rel="noreferrer" className="underline">Ollama</a> را نصب کرده و یک مدل مانند <code>llama3.1</code> را با دستور <code dir="ltr">ollama pull llama3.1</code> دانلود کنید.
+                      </p>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={saveSettings}>ذخیره</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
           </div>
 
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
@@ -180,31 +215,26 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
             ) : (
               <div className="space-y-4">
                 {messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
+                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                       <p className="text-sm whitespace-pre-wrap" dir="rtl">{msg.content}</p>
                     </div>
                   </div>
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg p-3">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
+                    <div className="bg-muted rounded-lg p-3"><Loader2 className="h-4 w-4 animate-spin" /></div>
                   </div>
                 )}
               </div>
             )}
           </ScrollArea>
+
+          {lastSource && (
+            <div className="px-4 py-1 text-[10px] text-muted-foreground border-t flex items-center gap-1 justify-end">
+              {lastSource === 'ollama' ? <><Cpu className="h-3 w-3" /> پاسخ از مدل محلی</> : <><Cloud className="h-3 w-3" /> پاسخ از سرویس ابری</>}
+            </div>
+          )}
 
           <div className="p-4 border-t">
             <div className="flex gap-2">
@@ -217,17 +247,8 @@ export const HSEAIChat = ({ pageContext }: HSEAIChatProps) => {
                 dir="rtl"
                 disabled={isLoading}
               />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                size="icon"
-                className="h-[60px] w-[60px]"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="h-5 w-5" />
-                )}
+              <Button onClick={handleSend} disabled={!input.trim() || isLoading} size="icon" className="h-[60px] w-[60px]">
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </Button>
             </div>
           </div>
