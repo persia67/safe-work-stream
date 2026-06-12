@@ -10,6 +10,7 @@ import { Shield, Loader2, Mail, ArrowRight } from 'lucide-react';
 import { z } from 'zod';
 import { ThemeLanguageToggle } from '@/components/ThemeLanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { persistOfflineCredentials, tryOfflineLogin, hasOfflineCredentials } from '@/lib/offlineAuth';
 
 const authSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }).max(255),
@@ -114,30 +115,53 @@ const Auth = () => {
 
     try {
       if (authMode === 'login') {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email.trim(),
-          password: formData.password,
-        });
+        const emailTrim = formData.email.trim();
+        const isOffline = !navigator.onLine;
 
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: t.authFailed,
-              description: t.invalidCreds,
-              variant: 'destructive',
-            });
+        // Offline path: verify locally with cached credentials.
+        if (isOffline && hasOfflineCredentials(emailTrim)) {
+          const ok = await tryOfflineLogin(emailTrim, formData.password);
+          if (ok) {
+            toast({ title: t.welcomeBack, description: language === 'fa' ? 'ورود آفلاین موفق' : 'Offline login successful' });
+            navigate('/');
           } else {
-            throw error;
+            toast({ title: t.authFailed, description: t.invalidCreds, variant: 'destructive' });
           }
           return;
         }
 
-        if (data.session) {
-          toast({
-            title: t.welcomeBack,
-            description: t.loginSuccess,
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: emailTrim,
+            password: formData.password,
           });
-          navigate('/');
+
+          if (error) {
+            if (error.message.includes('Invalid login credentials')) {
+              toast({ title: t.authFailed, description: t.invalidCreds, variant: 'destructive' });
+            } else {
+              throw error;
+            }
+            return;
+          }
+
+          if (data.session) {
+            // Cache credentials for future offline logins.
+            persistOfflineCredentials(emailTrim, formData.password).catch(() => {});
+            toast({ title: t.welcomeBack, description: t.loginSuccess });
+            navigate('/');
+          }
+        } catch (networkErr) {
+          // Network failure — try offline cache as a last resort.
+          if (hasOfflineCredentials(emailTrim)) {
+            const ok = await tryOfflineLogin(emailTrim, formData.password);
+            if (ok) {
+              toast({ title: t.welcomeBack, description: language === 'fa' ? 'ورود آفلاین موفق' : 'Offline login successful' });
+              navigate('/');
+              return;
+            }
+          }
+          throw networkErr;
         }
       } else if (authMode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
