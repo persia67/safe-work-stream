@@ -204,42 +204,20 @@ export default function UserManagementContent() {
 
       const validatedData = validationResult.data;
 
-      // Get current session for authorization
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: t('error'),
-          description: 'لطفا دوباره وارد شوید',
-          variant: 'destructive',
-        });
-        return;
-      }
+      // Local-first: create user directly in the local DB.
+      const { adminCreateUser } = await import('@/lib/localAuth');
+      const { error } = await adminCreateUser({
+        email: validatedData.email,
+        password: validatedData.password,
+        name: validatedData.name,
+        department: validatedData.department || null,
+        phone: validatedData.phone || null,
+        role: validatedData.role as any,
+        organization_id: registerOrganization || null,
+      });
 
-      // Call Edge Function to create user with admin privileges
-      const response = await fetch(
-        `https://thaghdaioherrbiyjpnf.supabase.co/functions/v1/admin-create-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            email: validatedData.email,
-            password: validatedData.password,
-            name: validatedData.name,
-            department: validatedData.department || null,
-            phone: validatedData.phone || null,
-            role: validatedData.role,
-            organization_id: registerOrganization || null,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'خطا در ثبت کاربر');
+      if (error) {
+        throw new Error(error.message || 'خطا در ثبت کاربر');
       }
 
       toast({

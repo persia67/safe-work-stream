@@ -102,48 +102,12 @@ async function streamOllama(
 }
 
 async function streamCloud(
-  messages: ChatMessage[],
-  pageContext: string | undefined,
-  handlers: StreamHandlers
+  _messages: ChatMessage[],
+  _pageContext: string | undefined,
+  _handlers: StreamHandlers
 ): Promise<boolean> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return false;
-  const url = `https://thaghdaioherrbiyjpnf.supabase.co/functions/v1/hse-ai-chat`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({ messages, pageContext }),
-  });
-  if (!resp.ok || !resp.body) return false;
-  handlers.onSource?.('cloud');
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let nl: number;
-    while ((nl = buffer.indexOf('\n')) !== -1) {
-      let line = buffer.slice(0, nl);
-      buffer = buffer.slice(nl + 1);
-      if (line.endsWith('\r')) line = line.slice(0, -1);
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (json === '[DONE]') return true;
-      try {
-        const obj = JSON.parse(json);
-        const delta = obj?.choices?.[0]?.delta?.content;
-        if (delta) handlers.onDelta(delta);
-      } catch {
-        // ignore
-      }
-    }
-  }
-  return true;
+  // Local-first build: cloud AI is disabled. Only the local Ollama path is used.
+  return false;
 }
 
 export async function streamChat(
