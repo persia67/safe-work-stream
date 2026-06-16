@@ -1,17 +1,14 @@
-// Service worker for full offline support.
-// Strategy:
-//   - Pre-cache the app shell on install (best-effort).
-//   - HTML navigations: network-first with cache fallback (prevents stale UI
-//     while still working when offline).
-//   - Static assets under /assets/: cache-first (immutable hashed builds).
-//   - Supabase/API requests: network-only (never cached — they require auth).
-//   - On install / activate we skipWaiting + claim so the new SW takes over
-//     immediately.
+// Service worker for full offline support (local-first build).
+// - Pre-cache the app shell on install.
+// - HTML navigations: network-first → cache fallback.
+// - Static assets: cache-first.
+// - Any request to a remote API host (supabase.*) is ignored — the app no
+//   longer talks to Supabase at runtime.
 
-const VERSION = 'v3-offline';
+const VERSION = 'v4-local-first';
 const APP_CACHE = `hse-app-${VERSION}`;
 const ASSET_CACHE = `hse-assets-${VERSION}`;
-const PRECACHE_URLS = ['/', '/index.html', '/manifest.json'];
+const PRECACHE_URLS = ['/', '/index.html', '/manifest.json', '/seed/seed.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -40,13 +37,11 @@ function isHTMLNavigation(request) {
 
 function isAsset(url) {
   return url.pathname.startsWith('/assets/') ||
-    /\.(?:js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|webp|ico)$/i.test(url.pathname);
+    /\.(?:js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|webp|ico|json)$/i.test(url.pathname);
 }
 
-function isApi(url) {
-  return url.hostname.includes('supabase.co') ||
-    url.hostname.includes('supabase.in') ||
-    url.pathname.startsWith('/functions/');
+function isRemoteApi(url) {
+  return url.hostname.includes('supabase.co') || url.hostname.includes('supabase.in');
 }
 
 self.addEventListener('fetch', (event) => {
@@ -55,10 +50,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Never touch API / auth requests — they need fresh network and credentials.
-  if (isApi(url)) return;
+  // Don't intercept remote API calls — let the browser handle the (likely
+  // failing) request; in local mode the app shouldn't make any.
+  if (isRemoteApi(url)) return;
 
-  // HTML navigations: network-first.
   if (isHTMLNavigation(request)) {
     event.respondWith(
       fetch(request)
@@ -74,7 +69,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Hashed assets: cache-first.
   if (isAsset(url) && url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cached) => {
@@ -91,7 +85,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else: stale-while-revalidate.
   event.respondWith(
     caches.match(request).then((cached) => {
       const networkFetch = fetch(request).then((resp) => {
