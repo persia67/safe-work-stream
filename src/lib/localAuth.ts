@@ -43,13 +43,16 @@ function fromB64(s: string): Uint8Array {
 }
 
 async function hashPassword(password: string, saltB64?: string): Promise<{ hash: string; salt: string }> {
-  const salt = saltB64 ? fromB64(saltB64) : crypto.getRandomValues(new Uint8Array(16));
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const saltBytes = saltB64 ? fromB64(saltB64) : crypto.getRandomValues(new Uint8Array(16));
+  const saltBuf = saltBytes.buffer.slice(saltBytes.byteOffset, saltBytes.byteOffset + saltBytes.byteLength) as ArrayBuffer;
+  const pwdBytes = new TextEncoder().encode(password);
+  const pwdBuf = pwdBytes.buffer.slice(pwdBytes.byteOffset, pwdBytes.byteOffset + pwdBytes.byteLength) as ArrayBuffer;
+  const key = await crypto.subtle.importKey('raw', pwdBuf, 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERS, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: saltBuf, iterations: PBKDF2_ITERS, hash: 'SHA-256' },
     key, 256,
   );
-  return { hash: toB64(bits), salt: toB64(salt) };
+  return { hash: toB64(bits), salt: toB64(saltBytes) };
 }
 
 async function verifyPassword(password: string, hashB64: string, saltB64: string): Promise<boolean> {
