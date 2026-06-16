@@ -105,7 +105,7 @@ const Auth = () => {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateEmailForm()) {
       return;
     }
@@ -115,86 +115,54 @@ const Auth = () => {
 
     try {
       if (authMode === 'login') {
-        const emailTrim = formData.email.trim();
-        const isOffline = !navigator.onLine;
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email.trim(),
+          password: formData.password,
+        });
 
-        // Offline path: verify locally with cached credentials.
-        if (isOffline && hasOfflineCredentials(emailTrim)) {
-          const ok = await tryOfflineLogin(emailTrim, formData.password);
-          if (ok) {
-            toast({ title: t.welcomeBack, description: language === 'fa' ? 'ورود آفلاین موفق' : 'Offline login successful' });
-            navigate('/');
-          } else {
-            toast({ title: t.authFailed, description: t.invalidCreds, variant: 'destructive' });
-          }
+        if (error) {
+          toast({ title: t.authFailed, description: t.invalidCreds, variant: 'destructive' });
           return;
         }
 
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: emailTrim,
-            password: formData.password,
-          });
-
-          if (error) {
-            if (error.message.includes('Invalid login credentials')) {
-              toast({ title: t.authFailed, description: t.invalidCreds, variant: 'destructive' });
-            } else {
-              throw error;
-            }
-            return;
-          }
-
-          if (data.session) {
-            // Cache credentials for future offline logins.
-            persistOfflineCredentials(emailTrim, formData.password).catch(() => {});
-            toast({ title: t.welcomeBack, description: t.loginSuccess });
-            navigate('/');
-          }
-        } catch (networkErr) {
-          // Network failure — try offline cache as a last resort.
-          if (hasOfflineCredentials(emailTrim)) {
-            const ok = await tryOfflineLogin(emailTrim, formData.password);
-            if (ok) {
-              toast({ title: t.welcomeBack, description: language === 'fa' ? 'ورود آفلاین موفق' : 'Offline login successful' });
-              navigate('/');
-              return;
-            }
-          }
-          throw networkErr;
+        if (data.session) {
+          toast({ title: t.welcomeBack, description: t.loginSuccess });
+          navigate('/');
         }
       } else if (authMode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
           email: formData.email.trim(),
           password: formData.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
             data: {
               name: formData.name?.trim() || formData.email.split('@')[0],
-            }
-          }
+            },
+          },
         });
 
         if (error) {
-          if (error.message.includes('already registered')) {
-            toast({
-              title: t.regFailed,
-              description: t.emailExists,
-              variant: 'destructive',
-            });
+          const msg = String(error.message || '');
+          if (msg.includes('already registered')) {
+            toast({ title: t.regFailed, description: t.emailExists, variant: 'destructive' });
           } else {
-            throw error;
+            toast({ title: t.regFailed, description: msg, variant: 'destructive' });
           }
           return;
         }
 
         if (data.user) {
+          // Immediately sign the user in so they can use the app right away.
+          await supabase.auth.signInWithPassword({
+            email: formData.email.trim(),
+            password: formData.password,
+          });
           toast({
             title: t.accountCreated,
-            description: t.checkEmail,
+            description: language === 'fa'
+              ? 'حساب شما ساخته شد و وارد سیستم شدید.'
+              : 'Account created and signed in.',
           });
-          setAuthMode('login');
-          setFormData({ ...formData, email: '', password: '', name: '' });
+          navigate('/');
         }
       }
     } catch (error: any) {
