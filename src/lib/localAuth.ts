@@ -19,6 +19,8 @@ export interface LocalUser {
   organization_id?: string | null;
   password_hash?: string;       // base64
   password_salt?: string;       // base64
+  recovery_hash?: string;       // base64 (PBKDF2 of recovery code)
+  recovery_salt?: string;       // base64
   active?: boolean;
   created_at?: string;
 }
