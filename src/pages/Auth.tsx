@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { resetPasswordWithRecoveryCode } from '@/lib/localAuth';
+import { resetPasswordWithRecoveryCode, emergencyResetAdminPassword } from '@/lib/localAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -346,6 +346,74 @@ const Auth = () => {
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.resetBtn}
                   </Button>
                 </form>
+              )}
+
+              {/* Emergency admin reset (when recovery code is lost) */}
+              {!resetDone && (
+                <div className="mt-6 pt-4 border-t">
+                  <details className="text-sm">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                      {language === 'fa' ? 'بازنشانی اضطراری رمز مدیر سیستم' : 'Emergency admin password reset'}
+                    </summary>
+                    <div className="mt-3 space-y-3">
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'fa'
+                          ? 'فقط برای زمانی که رمز و کد بازیابی هر دو از دست رفته‌اند. رمز کاربر مدیر اصلی به مقدار زیر تغییر می‌کند.'
+                          : 'Use only if both password and recovery code are lost. Resets the primary admin password.'}
+                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="emg-pwd">{t.newPassword}</Label>
+                        <Input
+                          id="emg-pwd"
+                          type="text"
+                          value={formData.newPassword}
+                          onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                          className="font-mono"
+                          placeholder={language === 'fa' ? 'حداقل ۸ کاراکتر' : 'At least 8 chars'}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emg-confirm">
+                          {language === 'fa' ? 'برای تأیید عبارت RESET-ADMIN را وارد کنید' : 'Type RESET-ADMIN to confirm'}
+                        </Label>
+                        <Input
+                          id="emg-confirm"
+                          type="text"
+                          value={formData.recoveryCode}
+                          onChange={(e) => setFormData({ ...formData, recoveryCode: e.target.value })}
+                          className="font-mono"
+                          placeholder="RESET-ADMIN"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="w-full"
+                        disabled={loading}
+                        onClick={async () => {
+                          setLoading(true);
+                          const { email, error } = await emergencyResetAdminPassword(
+                            formData.newPassword,
+                            formData.recoveryCode.trim(),
+                          );
+                          setLoading(false);
+                          if (error) {
+                            toast({ title: t.error, description: error.message, variant: 'destructive' });
+                            return;
+                          }
+                          toast({
+                            title: language === 'fa' ? 'رمز مدیر بازنشانی شد' : 'Admin password reset',
+                            description: (language === 'fa' ? 'ایمیل: ' : 'Email: ') + email,
+                          });
+                          setFormData({ ...formData, email: email ?? '', password: formData.newPassword, recoveryCode: '', newPassword: '' });
+                          setAuthMode('login');
+                        }}
+                      >
+                        {language === 'fa' ? 'اعمال بازنشانی اضطراری' : 'Apply emergency reset'}
+                      </Button>
+                    </div>
+                  </details>
+                </div>
               )}
             </>
           )}
