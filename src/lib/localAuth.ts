@@ -105,11 +105,27 @@ function buildSession(user: LocalUser): LocalSession {
   };
 }
 
+function generateRecoveryCode(): string {
+  // 24 chars, grouped 4-4-4-4-4-4 for readability, base32-ish alphabet (no 0/O/1/I).
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) {
+    s += alphabet[bytes[i] % alphabet.length];
+    if ((i + 1) % 4 === 0 && i !== bytes.length - 1) s += '-';
+  }
+  return s;
+}
+
+function normalizeRecoveryCode(code: string): string {
+  return code.replace(/[\s-]/g, '').toUpperCase();
+}
+
 export async function signUp(
   email: string,
   password: string,
   meta?: { name?: string; department?: string; phone?: string; role?: AppRole; organization_id?: string | null },
-): Promise<{ user: LocalSession['user'] | null; session: LocalSession | null; error: any }> {
+): Promise<{ user: LocalSession['user'] | null; session: LocalSession | null; recoveryCode?: string | null; error: any }> {
   const emailTrim = email.trim().toLowerCase();
   const existing = await findUserByEmail(emailTrim);
   if (existing) return { user: null, session: null, error: { message: 'already registered' } };
@@ -127,6 +143,10 @@ export async function signUp(
   const id = crypto.randomUUID();
   const role: AppRole = isFirstUser ? 'admin' : (meta?.role ?? 'viewer');
 
+  // Generate a one-time recovery code so the user can reset their password offline.
+  const recoveryCode = generateRecoveryCode();
+  const { hash: recHash, salt: recSalt } = await hashPassword(normalizeRecoveryCode(recoveryCode));
+
   const user: LocalUser = {
     id, email: emailTrim,
     name: meta?.name ?? emailTrim.split('@')[0],
@@ -134,6 +154,7 @@ export async function signUp(
     phone: meta?.phone ?? null,
     organization_id: meta?.organization_id ?? null,
     password_hash: hash, password_salt: salt,
+    recovery_hash: recHash, recovery_salt: recSalt,
     active: true,
     created_at: new Date().toISOString(),
   };
@@ -164,7 +185,36 @@ export async function signUp(
     changed_at: new Date().toISOString(),
   });
 
-  return { user: { id, email: emailTrim, user_metadata: { name: user.name ?? null } }, session: null, error: null };
+  return { user: { id, email: emailTrim, user_metadata: { name: user.name ?? null } }, session: null, recoveryCode, error: null };
+}
+
+// Reset password using the recovery code shown at signup.
+export async function resetPasswordWithRecoveryCode(
+  email: string, recoveryCode: string, newPassword: string,
+): Promise<{ error: any }> {
+  const user = await findUserByEmail(email.trim());
+  if (!user || !user.recovery_hash || !user.recovery_salt) {
+    return { error: { message: 'کاربر یا کد بازیابی نامعتبر است' } };
+  }
+  const ok = await verifyPassword(normalizeRecoveryCode(recoveryCode), user.recovery_hash, user.recovery_salt);
+  if (!ok) return { error: { message: 'کد بازیابی نادرست است' } };
+
+  const { hash, salt } = await hashPassword(newPassword);
+  await updateRow('local_users', user.id, {
+    password_hash: hash, password_salt: salt,
+  });
+  return { error: null };
+}
+
+// Generate a NEW recovery code (invalidates the old one). Returns plaintext once.
+export async function regenerateRecoveryCode(userId: string): Promise<{ recoveryCode: string | null; error: any }> {
+  const all = (await getAll('local_users')) as LocalUser[];
+  const user = all.find((u) => u.id === userId);
+  if (!user) return { recoveryCode: null, error: { message: 'user not found' } };
+  const code = generateRecoveryCode();
+  const { hash, salt } = await hashPassword(normalizeRecoveryCode(code));
+  await updateRow('local_users', user.id, { recovery_hash: hash, recovery_salt: salt });
+  return { recoveryCode: code, error: null };
 }
 
 export async function signIn(email: string, password: string): Promise<{ session: LocalSession | null; error: any }> {
