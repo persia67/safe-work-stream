@@ -217,6 +217,41 @@ export async function regenerateRecoveryCode(userId: string): Promise<{ recovery
   return { recoveryCode: code, error: null };
 }
 
+// Emergency: reset password of the (first) admin user when recovery code is lost.
+// Only allowed when there is at least one admin and the caller types the confirmation phrase.
+export async function emergencyResetAdminPassword(
+  newPassword: string,
+  confirmation: string,
+): Promise<{ email: string | null; error: any }> {
+  if (confirmation !== 'RESET-ADMIN') {
+    return { email: null, error: { message: 'عبارت تأیید نادرست است' } };
+  }
+  if (!newPassword || newPassword.length < 8) {
+    return { email: null, error: { message: 'رمز جدید باید حداقل ۸ کاراکتر باشد' } };
+  }
+  const roles = (await getAll('user_roles')) as Array<{ user_id: string; role: string }>;
+  const adminUserIds = roles.filter((r) => r.role === 'admin').map((r) => r.user_id);
+  if (adminUserIds.length === 0) {
+    return { email: null, error: { message: 'هیچ کاربر مدیری یافت نشد' } };
+  }
+  const users = (await getAll('local_users')) as LocalUser[];
+  const admin = users
+    .filter((u) => adminUserIds.includes(u.id))
+    .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))[0];
+  if (!admin) return { email: null, error: { message: 'کاربر مدیر یافت نشد' } };
+
+  const { hash, salt } = await hashPassword(newPassword);
+  // Also rotate recovery so old code (if any) is invalidated.
+  const newRecovery = generateRecoveryCode();
+  const { hash: rH, salt: rS } = await hashPassword(normalizeRecoveryCode(newRecovery));
+  await updateRow('local_users', admin.id, {
+    password_hash: hash, password_salt: salt,
+    recovery_hash: rH, recovery_salt: rS,
+    active: true,
+  });
+  return { email: admin.email, error: null };
+}
+
 export async function signIn(email: string, password: string): Promise<{ session: LocalSession | null; error: any }> {
   const user = await findUserByEmail(email.trim());
   if (!user || !user.password_hash || !user.password_salt) {
