@@ -37,10 +37,10 @@ export const supabase = {
     },
     async signUp({ email, password, options }: { email: string; password: string; options?: { data?: AnyObj; emailRedirectTo?: string } }) {
       const meta = options?.data;
-      const { user, error } = await signUp(email, password, {
+      const { user, recoveryCode, error } = await signUp(email, password, {
         name: meta?.name,
       });
-      return { data: { user, session: null }, error };
+      return { data: { user, session: null, recoveryCode: recoveryCode ?? null }, error };
     },
     async signOut() {
       await signOut();
