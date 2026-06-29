@@ -358,9 +358,20 @@ const Auth = () => {
                     <div className="mt-3 space-y-3">
                       <p className="text-xs text-muted-foreground">
                         {language === 'fa'
-                          ? 'فقط برای زمانی که رمز و کد بازیابی هر دو از دست رفته‌اند. رمز کاربر مدیر اصلی به مقدار زیر تغییر می‌کند.'
-                          : 'Use only if both password and recovery code are lost. Resets the primary admin password.'}
+                          ? 'فقط برای زمانی که رمز و کد بازیابی هر دو از دست رفته‌اند. اگر ایمیل را وارد کنید همان مدیر بازنشانی می‌شود، در غیر این صورت مدیر اصلی انتخاب می‌شود.'
+                          : 'Use only if both password and recovery code are lost. Enter an email to reset that admin, or leave it empty to reset the primary admin.'}
                       </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="emg-email">{t.email}</Label>
+                        <Input
+                          id="emg-email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="name@company.com"
+                          autoComplete="email"
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="emg-pwd">{t.newPassword}</Label>
                         <Input
@@ -395,6 +406,7 @@ const Auth = () => {
                           const { email, error } = await emergencyResetAdminPassword(
                             formData.newPassword,
                             formData.recoveryCode.trim(),
+                            formData.email.trim() || undefined,
                           );
                           setLoading(false);
                           if (error) {

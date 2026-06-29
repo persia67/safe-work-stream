@@ -121,6 +121,32 @@ function normalizeRecoveryCode(code: string): string {
   return code.replace(/[\s-]/g, '').toUpperCase();
 }
 
+function isSystemAdminRole(role?: string | null): boolean {
+  return role === 'admin' || role === 'developer';
+}
+
+async function ensureLocalUserForProfile(profile: Partial<LocalUser> & { user_id?: string; id?: string }): Promise<LocalUser | null> {
+  const email = profile.email?.trim().toLowerCase();
+  const id = profile.user_id ?? profile.id;
+  if (!email || !id) return null;
+
+  const existing = await findUserByEmail(email);
+  if (existing) return existing;
+
+  const user: LocalUser = {
+    id,
+    email,
+    name: profile.name ?? email.split('@')[0],
+    department: profile.department ?? null,
+    phone: profile.phone ?? null,
+    organization_id: profile.organization_id ?? null,
+    active: profile.active !== false,
+    created_at: profile.created_at ?? new Date().toISOString(),
+  };
+  await putRow('local_users', user);
+  return user;
+}
+
 export async function signUp(
   email: string,
   password: string,
@@ -222,6 +248,7 @@ export async function regenerateRecoveryCode(userId: string): Promise<{ recovery
 export async function emergencyResetAdminPassword(
   newPassword: string,
   confirmation: string,
+  targetEmail?: string,
 ): Promise<{ email: string | null; error: any }> {
   if (confirmation !== 'RESET-ADMIN') {
     return { email: null, error: { message: 'عبارت تأیید نادرست است' } };
@@ -229,15 +256,42 @@ export async function emergencyResetAdminPassword(
   if (!newPassword || newPassword.length < 8) {
     return { email: null, error: { message: 'رمز جدید باید حداقل ۸ کاراکتر باشد' } };
   }
-  const roles = (await getAll('user_roles')) as Array<{ user_id: string; role: string }>;
-  const adminUserIds = roles.filter((r) => r.role === 'admin').map((r) => r.user_id);
-  if (adminUserIds.length === 0) {
-    return { email: null, error: { message: 'هیچ کاربر مدیری یافت نشد' } };
-  }
+  const roles = (await getAll('user_roles')) as Array<{ user_id: string; role: string; created_at?: string }>;
+  const privilegedRoles = roles.filter((r) => isSystemAdminRole(r.role));
+  const privilegedUserIds = privilegedRoles.map((r) => r.user_id);
   const users = (await getAll('local_users')) as LocalUser[];
-  const admin = users
-    .filter((u) => adminUserIds.includes(u.id))
-    .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))[0];
+  const profiles = (await getAll('user_profiles')) as Array<Partial<LocalUser> & { user_id?: string }>;
+
+  let admin: LocalUser | null = null;
+  const emailTrim = targetEmail?.trim().toLowerCase();
+
+  if (emailTrim) {
+    admin = users.find((u) => u.email.toLowerCase() === emailTrim) ?? null;
+    if (!admin) {
+      const profile = profiles.find((p) => p.email?.toLowerCase() === emailTrim);
+      admin = profile ? await ensureLocalUserForProfile(profile) : null;
+    }
+    if (!admin) return { email: null, error: { message: 'این ایمیل در کاربران محلی یافت نشد' } };
+    if (!privilegedUserIds.includes(admin.id)) {
+      return { email: null, error: { message: 'این ایمیل نقش مدیر سیستم یا توسعه‌دهنده ندارد' } };
+    }
+  } else {
+    if (privilegedUserIds.length === 0) {
+      return { email: null, error: { message: 'هیچ کاربر مدیر سیستم/توسعه‌دهنده یافت نشد' } };
+    }
+
+    admin = users
+      .filter((u) => privilegedUserIds.includes(u.id))
+      .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))[0] ?? null;
+
+    if (!admin) {
+      const profile = profiles
+        .filter((p) => p.user_id && privilegedUserIds.includes(p.user_id))
+        .sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))[0];
+      admin = profile ? await ensureLocalUserForProfile(profile) : null;
+    }
+  }
+
   if (!admin) return { email: null, error: { message: 'کاربر مدیر یافت نشد' } };
 
   const { hash, salt } = await hashPassword(newPassword);
