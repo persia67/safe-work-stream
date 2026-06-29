@@ -1,18 +1,18 @@
-name: HSE Management Multi-Platform Build
+name: Build Desktop & Android
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  # --- ساخت نسخه دسکتاپ ---
-  build-desktop:
-    name: Desktop (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-
+  # ───────────────────────── Windows Installer (NSIS) ─────────────────────────
+  build-windows:
+    name: Windows Installer (.exe)
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -22,33 +22,30 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build and Package Electron
-        # استفاده از اسکریپت دقیق شما برای بسته‌بندی
-        run: npm run electron:dist
+      - name: Build Windows installer
+        run: npm run electron:dist-win
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Desktop Artifacts
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HSE-System-${{ matrix.os }}
+          name: HSE-Windows-Installer
           path: |
             dist-electron/*.exe
-            dist-electron/*.dmg
-            dist-electron/*.AppImage
-            dist-electron/*.deb
+            dist-electron/*.exe.blockmap
 
-  # --- ساخت نسخه اندروید ---
+  # ─────────────────────────────── Android APK ────────────────────────────────
   build-android:
-    name: Android Build
+    name: Android APK
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java JDK
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -60,22 +57,89 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build React Frontend
+      - name: Install Capacitor (if not present)
+        run: |
+          if ! npm ls @capacitor/core >/dev/null 2>&1; then
+            npm install --save @capacitor/core @capacitor/android
+            npm install --save-dev @capacitor/cli
+          fi
+
+      - name: Build web assets
         run: npm run build
 
-      - name: Capacitor Sync & Build
-        # نکته: مطمئن شوید پوشه android در پروژه وجود دارد
+      - name: Ensure capacitor.config exists
         run: |
-          npx cap sync android
+          if [ ! -f capacitor.config.ts ] && [ ! -f capacitor.config.json ]; then
+            cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "app.lovable.5676bf29ede94dec862a5bf064a532ac",
+            "appName": "HSE Management",
+            "webDir": "dist"
+          }
+          EOF
+          fi
+
+      - name: Add Android platform (if missing)
+        run: |
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+
+      - name: Capacitor sync
+        run: npx cap sync android
+
+      - name: Build APK (release, unsigned)
+        run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleRelease
 
-      - name: Upload Android APK
+      - name: Rename APK
+        run: |
+          mkdir -p android-output
+          cp android/app/build/outputs/apk/release/*.apk android-output/HSE-Management.apk
+
+      - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HSE-System-Android
-          path: android/app/build/outputs/apk/release/*.apk
+          name: HSE-Android-APK
+          path: android-output/*.apk
+
+  # ─────────────────────── GitHub Release (auto download) ─────────────────────
+  release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p out
+          find release-assets -type f \( -name "*.exe" -o -name "*.apk" -o -name "*.blockmap" \) -exec cp {} out/ \;
+          ls -lah out/
+
+      - name: Create / update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: HSE Management — Build ${{ github.run_number }}
+          body: |
+            Automated build from commit ${{ github.sha }}.
+
+            **Downloads:**
+            - Windows installer: `*.exe`
+            - Android APK: `HSE-Management.apk`
+          files: out/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
