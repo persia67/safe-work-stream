@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "hse-management-mcp",
+      "version": "0.1.0",
+      "title": "HSE Management MCP"
+    },
+    "tools": [
+      {
+        "name": "get_app_info",
+        "title": "Get app information",
+        "description": "Return public information about the HSE Management app and its MCP integration.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "hse_risk_matrix",
+        "title": "HSE risk matrix",
+        "description": "Calculate a simple 5x5 HSE risk score from likelihood and severity values.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "likelihood": {
+              "type": "number",
+              "description": "Likelihood rating from 1 to 5."
+            },
+            "severity": {
+              "type": "number",
+              "description": "Severity rating from 1 to 5."
+            }
+          },
+          "required": [
+            "likelihood",
+            "severity"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "hse_guidance",
+        "title": "HSE guidance",
+        "description": "Provide concise HSE process guidance for risk, incident, training, or health workflows.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "enum": [
+                "risk_assessment",
+                "incident",
+                "training",
+                "health"
+              ],
+              "description": "The HSE workflow topic to get guidance for."
+            }
+          },
+          "required": [
+            "topic"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
