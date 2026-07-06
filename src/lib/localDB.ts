@@ -3,7 +3,7 @@
 // without any changes. All data lives in the user's browser/Electron storage.
 
 const DB_NAME = 'hse_local_db_v1';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 // Tables we mirror from the previous Supabase schema. The "view"
 // health_examinations_limited is treated as an alias of health_examinations.
@@ -257,6 +257,14 @@ class QueryBuilder<T = any> implements PromiseLike<{ data: T | null; error: any 
   }
 }
 
-export function from(table: string): QueryBuilder {
+export function from(table: string): any {
+  // If a server URL is configured, route CRUD through the remote adapter.
+  const remoteUrl = (import.meta as any).env?.VITE_SERVER_URL;
+  if (remoteUrl) {
+    // Lazy require to avoid circular import cost when unused.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { remoteFrom } = require('./remoteAdapter');
+    return remoteFrom(resolveTable(table));
+  }
   return new QueryBuilder(resolveTable(table));
 }
