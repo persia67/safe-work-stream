@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, FileText, Activity, Users, TrendingUp, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import SafetyKPICharts from './SafetyKPICharts';
 
 interface DashboardContentProps {
   incidents: any[];
@@ -84,6 +85,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Safety KPIs (FSI / LTIFR / TRIR / SR / Near-Miss) */}
+      <SafetyKPICharts incidents={incidents} />
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsData.map((stat, index) => {

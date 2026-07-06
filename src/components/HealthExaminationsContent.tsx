@@ -18,6 +18,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { Plus, Search, Eye, Edit, Trash2, TrendingUp, AlertTriangle, Activity, Brain, Calendar, User, Stethoscope, BarChart3, Target, CheckCircle, FileText, ClipboardList, ArrowLeft, Building2 } from 'lucide-react';
 import { formatPersianDate, gregorianToPersian, persianToGregorian } from '@/lib/dateUtils';
 import OccupationalHealthRecordForm from './OccupationalHealthRecordForm';
+const PersonnelHealthFile = lazy(() => import('./PersonnelHealthFile'));
 
 interface HealthExamination {
   id: string;
@@ -68,7 +69,7 @@ const HealthExaminationsContent = () => {
   const [loading, setLoading] = useState(true);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [isMedicalOfficer, setIsMedicalOfficer] = useState(false);
-  const [activeMainTab, setActiveMainTab] = useState('examinations');
+  const [activeMainTab, setActiveMainTab] = useState('personnel-file');
   const [showFullForm, setShowFullForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [occupationalSearchTerm, setOccupationalSearchTerm] = useState('');
@@ -475,16 +476,27 @@ const HealthExaminationsContent = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="personnel-file" className="gap-2">
+            <User className="w-4 h-4" />
+            پرونده سلامت پرسنل
+          </TabsTrigger>
           <TabsTrigger value="examinations" className="gap-2">
             <ClipboardList className="w-4 h-4" />
             معاینات ساده
           </TabsTrigger>
           <TabsTrigger value="occupational" className="gap-2">
             <FileText className="w-4 h-4" />
-            پرونده‌های سلامت شغلی (فرم وزارتخانه)
+            فرم وزارتخانه (بایگانی)
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="personnel-file" className="mt-6">
+          <Suspense fallback={<div className="p-8 text-center">در حال بارگذاری…</div>}>
+            <PersonnelHealthFile />
+          </Suspense>
+        </TabsContent>
+
 
         {/* Simple Examinations Tab */}
         <TabsContent value="examinations" className="space-y-6 mt-6">

@@ -3,7 +3,7 @@
 // without any changes. All data lives in the user's browser/Electron storage.
 
 const DB_NAME = 'hse_local_db_v1';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 // Tables we mirror from the previous Supabase schema. The "view"
 // health_examinations_limited is treated as an alias of health_examinations.
@@ -13,6 +13,9 @@ export const TABLES = [
   'user_roles',
   'role_audit_log',
   'local_users',          // local-only: holds password hashes
+  'role_permissions',     // developer-managed RBAC matrix
+  'personnel_health_files',
+  'personnel_health_events',
   'health_examinations',
   'occupational_health_records',
   'ergonomic_assessments',
@@ -254,6 +257,16 @@ class QueryBuilder<T = any> implements PromiseLike<{ data: T | null; error: any 
   }
 }
 
-export function from(table: string): QueryBuilder {
+export function from(table: string): any {
+  const remoteUrl = (import.meta as any).env?.VITE_SERVER_URL;
+  if (remoteUrl) {
+    // Dynamic import kept as a Promise-returning proxy would break sync callers,
+    // so we rely on the static import (tree-shaken when unused).
+    return remoteFromLazy(resolveTable(table));
+  }
   return new QueryBuilder(resolveTable(table));
 }
+
+// Static import from a sibling module (loaded only if server mode is on at runtime).
+import { remoteFrom as _remoteFrom } from './remoteAdapter';
+function remoteFromLazy(t: string) { return _remoteFrom(t); }
