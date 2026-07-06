@@ -69,7 +69,7 @@ const HealthExaminationsContent = () => {
   const [loading, setLoading] = useState(true);
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [isMedicalOfficer, setIsMedicalOfficer] = useState(false);
-  const [activeMainTab, setActiveMainTab] = useState('examinations');
+  const [activeMainTab, setActiveMainTab] = useState('personnel-file');
   const [showFullForm, setShowFullForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [occupationalSearchTerm, setOccupationalSearchTerm] = useState('');
