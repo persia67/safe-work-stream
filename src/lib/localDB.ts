@@ -13,6 +13,9 @@ export const TABLES = [
   'user_roles',
   'role_audit_log',
   'local_users',          // local-only: holds password hashes
+  'role_permissions',     // developer-managed RBAC matrix
+  'personnel_health_files',
+  'personnel_health_events',
   'health_examinations',
   'occupational_health_records',
   'ergonomic_assessments',
