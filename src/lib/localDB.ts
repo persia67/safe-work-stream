@@ -258,13 +258,15 @@ class QueryBuilder<T = any> implements PromiseLike<{ data: T | null; error: any 
 }
 
 export function from(table: string): any {
-  // If a server URL is configured, route CRUD through the remote adapter.
   const remoteUrl = (import.meta as any).env?.VITE_SERVER_URL;
   if (remoteUrl) {
-    // Lazy require to avoid circular import cost when unused.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { remoteFrom } = require('./remoteAdapter');
-    return remoteFrom(resolveTable(table));
+    // Dynamic import kept as a Promise-returning proxy would break sync callers,
+    // so we rely on the static import (tree-shaken when unused).
+    return remoteFromLazy(resolveTable(table));
   }
   return new QueryBuilder(resolveTable(table));
 }
+
+// Static import from a sibling module (loaded only if server mode is on at runtime).
+import { remoteFrom as _remoteFrom } from './remoteAdapter';
+function remoteFromLazy(t: string) { return _remoteFrom(t); }
