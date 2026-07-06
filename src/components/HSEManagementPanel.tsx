@@ -54,6 +54,7 @@ const EnhancedRiskAssessmentContent = lazy(() => import('./EnhancedRiskAssessmen
 const HSEAIChat = lazy(() => import('./HSEAIChat').then(m => ({ default: m.HSEAIChat })));
 const UserManagementContent = lazy(() => import('./UserManagementContent'));
 const OrganizationManagementContent = lazy(() => import('./OrganizationManagementContent'));
+const PermissionsMatrix = lazy(() => import('./PermissionsMatrix'));
 const ThemeLanguageToggle = lazy(() => import('./ThemeLanguageToggle').then(m => ({ default: m.ThemeLanguageToggle })));
 
 // Fallback loader for lazy components
@@ -372,6 +373,7 @@ const HSEManagementPanel = () => {
       { id: 'health-examinations', icon: User, label: t('health_examinations'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'medical_officer', 'developer'] },
       { id: 'safety-training', icon: Users, label: t('safety_training'), roles: ['admin', 'senior_manager', 'supervisor', 'safety_officer', 'developer'] },
       { id: 'user-management', icon: UserPlus, label: t('user_management'), roles: ['admin', 'developer'] },
+      { id: 'permissions', icon: Lock, label: 'ماتریس دسترسی', roles: ['developer'] },
       { id: 'organizations', icon: Shield, label: t('organization_management'), roles: ['admin', 'developer'] },
       { id: 'analytics', icon: BarChart3, label: t('analytics'), roles: ['admin', 'senior_manager', 'developer'] },
       { id: 'ai-insights', icon: Brain, label: t('ai_insights'), roles: ['admin', 'senior_manager', 'developer'] },
@@ -1146,6 +1148,11 @@ const HSEManagementPanel = () => {
             {activeTab === 'user-management' && (
               <Suspense fallback={<TabLoader />}>
                 <UserManagementContent />
+              </Suspense>
+            )}
+            {activeTab === 'permissions' && (
+              <Suspense fallback={<TabLoader />}>
+                <PermissionsMatrix currentRole={userRole} />
               </Suspense>
             )}
             {activeTab === 'organizations' && (
